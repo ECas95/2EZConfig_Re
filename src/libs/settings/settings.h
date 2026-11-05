@@ -13,6 +13,8 @@ public:
     // Load game-settings.json, global-settings.json, patches.json, and user-patches.json.
     void load(const std::string& gameDir, const std::string& userSettingsDir);
     void save() const;
+    const std::string& lastError() const;
+    const std::string& lastWarning() const;
     json& globalSettings();
     json& gameSettings();
     PatchStore& patchStore();
@@ -22,4 +24,6 @@ private:
     json m_globalSettings;
     json m_gameSettings;
     PatchStore m_patchStore;
+    mutable std::string m_lastError;
+    std::string m_lastWarning;
 };
