@@ -14,6 +14,8 @@
 
 **Recommended initial milestone:** asynchronous matching where the game never waits for the network. Real synchronized multiplayer is substantially more difficult and cannot be achieved by a lobby service alone.
 
+For a simple local demonstration, start the companion and open **http://127.0.0.1:8765/dashboard**. The Multiplayer Lab panel can create a room, join a second synthetic player, mark ready, request start and submit scores without any cabinet connection.
+
 ## REST lobby workflow
 
 Run tools/companion_server.py on a modern machine (see [SCORES_API.md](SCORES_API.md)).
