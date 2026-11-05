@@ -36,6 +36,7 @@ target_link_libraries(2EZ PRIVATE
     hooks
     -Wl,--whole-archive hypersonik -Wl,--no-whole-archive
     bindings
+    extension_events
     patches
     logger
     utilities
