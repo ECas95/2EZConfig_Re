@@ -7,7 +7,7 @@ This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rn
 ### Added
 - Live, read-only HID **Diagnostics** tab.
 - Disabled-by-default local extension event spool with a documented exported C ABI and runtime.ready event.
-- Python 3.10+ companion prototype for local scores, leaderboards, event viewer and match lobbies.
+- Python 3.10+ companion prototype for local scores, leaderboards, event viewer and match lobbies, including a same-origin local browser dashboard.
 - Dry-run-first event bridge; offline cabinet profile export/diff/explicit apply; custom-song manifest validator.
 - Integration tests covering Python tools and C++ event JSONL.
 - Documentation of proposed per-game song selection, custom chart loader, scores and multiplayer adapters, with explicit limits.
