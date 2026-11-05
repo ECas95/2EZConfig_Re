@@ -44,6 +44,14 @@ class CompanionTests(unittest.TestCase):
             with error:
                 return error.code, json.load(error)
 
+    def test_local_dashboard_is_static_and_api_auth_remains_enforced(self):
+        with urlopen(self.url + "/dashboard", timeout=5) as response:
+            html = response.read().decode("utf-8")
+            self.assertEqual(response.status, 200)
+            self.assertIn("2EZ Companion", html)
+            self.assertIn("connect-src 'self'", response.headers.get("Content-Security-Policy"))
+        self.assertEqual(self.call("/api/v1/events", token=None)[0], 401)
+
     def test_health_requires_token(self):
         self.assertEqual(self.call("/health", token=None)[0], 401)
         self.assertEqual(self.call("/health", token="wrong")[0], 401)
