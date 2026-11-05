@@ -9,6 +9,11 @@ This document describes the code currently integrated into the fork, including s
 | `src/2ezconfig-exe/main.cpp` | ImGui/GLFW configuration UI, game selection, bindings views, patch resource extraction, launch control and user-facing settings warnings |
 | `src/2ez-dll/dll.cpp` | In-game module initialization, game-family IO hooking, patch timing, DirectDraw/audio hooks |
 | `src/libs/input/` | HID/keyboard/mouse enumeration, capture, input state and outputs |
+| `src/libs/extension_events/` | Optional local JSONL event spool and schema validation (no network calls) |
+| `tools/companion_server.py` | Modern-host prototype: local scores, unverified leaderboards, event viewer and in-memory lobby coordination |
+| `tools/event_bridge.py` | Dry-run-first explicit JSONL-to-companion event relay |
+| `tools/songpack_validator.py` | Offline structural validation of rights-cleared song pack manifests |
+| `tools/cabinet_profiles.py` | Export/diff/apply for existing JSON configurations; no GUI selector |
 | `src/libs/bindings/` | Binding models and JSON serialization |
 | `src/libs/settings/settings.cpp` | `SettingsManager` facade, game/global state and recovery warnings |
 | `src/libs/settings/settings_io.cpp` | JSON object parsing, atomic-style save, `.bak` snapshot, preservation of damaged files |
@@ -19,6 +24,8 @@ This document describes the code currently integrated into the fork, including s
 | `src/common/include/` | Game metadata and executable-hash identification |
 | `src/resources/patches.json` | Embedded patch definition data |
 | `tests/settings_io_test.cpp` | Settings persistence/recovery regression tests |
+| `tests/extension_events_test.cpp` | JSONL event validation/disabled behavior regression checks |
+| `tools/tests/` | HTTP, song-pack, lobby and profile Python unit tests |
 | `.github/workflows/ci.yml` | PR validation, build and tests |
 | `.github/workflows/release.yml` | Controlled version-tag releases |
 
@@ -33,6 +40,12 @@ This document describes the code currently integrated into the fork, including s
 
 The patch pipeline remains distinct:
 `src/resources/patches.json` (bundled in EXE) -> `%APPDATA%\2ezconfig\patches.json` + game-local `user-patches.json` + selected state from `game-settings.json` -> DLL patch execution.
+
+## Extension event data flow
+
+With **extension_events_enabled** explicitly selected, the injected DLL emits a low-frequency **runtime.ready** JSONL record after the initialization thread applies normal patches. A trusted game-specific DLL may call the exported **EZ2_PublishEvent** function when it has a verified song/result event. Those events are appended locally to **2ez-events.jsonl**, never transmitted by the injected DLL. An operator may explicitly run **tools/event_bridge.py --send** on a modern host to send selected records to the companion's event viewer.
+
+The companion separately supports manual **/api/v1/scores** submissions and an in-memory lobby state machine; neither is connected automatically to actual in-game results. The full contract and per-game adapter roadmap are in [EXTENSION_EVENTS.md](EXTENSION_EVENTS.md) and [NEW_HOOKS.md](NEW_HOOKS.md).
 
 ## Design constraints and known debt
 
