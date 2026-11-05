@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Auto-provision MinGW toolchain (GCC 12.2.0, win32 threads, XP-safe)
-set(TOOLCHAIN_DIR "${CMAKE_SOURCE_DIR}/toolchain/mingw32")
+set(TOOLCHAIN_DIR "${CMAKE_SOURCE_DIR}/toolchain/mingw32" CACHE PATH "Windows XP-compatible 32-bit MinGW toolchain directory")
 if(NOT EXISTS "${TOOLCHAIN_DIR}/bin/gcc.exe")
+    # On clean checkouts the archive parent directory does not exist yet.
+    file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/toolchain")
     set(TOOLCHAIN_URL "https://github.com/ben-rnd/2EZConfig-V2/releases/download/toolchain/win32-mingw-gcc-12.2-toolchain.7z")
     set(TOOLCHAIN_ARCHIVE "${CMAKE_SOURCE_DIR}/toolchain/mingw-toolchain.7z")
     message(STATUS "Downloading MinGW toolchain...")
-    file(DOWNLOAD "${TOOLCHAIN_URL}" "${TOOLCHAIN_ARCHIVE}" SHOW_PROGRESS STATUS dl_status)
+    file(DOWNLOAD "${TOOLCHAIN_URL}" "${TOOLCHAIN_ARCHIVE}"
+        SHOW_PROGRESS STATUS dl_status TLS_VERIFY ON
+        EXPECTED_HASH SHA256=d76daf7a176f6e65ff75adc26efbadba89787bb14265696b94dce302cf1f8115
+    )
     list(GET dl_status 0 dl_code)
     if(NOT dl_code EQUAL 0)
-        message(FATAL_ERROR "Toolchain download failed: ${dl_status}")
+        file(REMOVE "${TOOLCHAIN_ARCHIVE}")
+        message(FATAL_ERROR "Toolchain download/integrity verification failed: ${dl_status}")
     endif()
     message(STATUS "Extracting toolchain...")
     execute_process(
@@ -28,6 +34,9 @@ if(NOT EXISTS "${TOOLCHAIN_DIR}/bin/gcc.exe")
         endif()
     endif()
     file(REMOVE "${TOOLCHAIN_ARCHIVE}")
+    if(NOT EXISTS "${TOOLCHAIN_DIR}/bin/gcc.exe" OR NOT EXISTS "${TOOLCHAIN_DIR}/bin/g++.exe")
+        message(FATAL_ERROR "Toolchain extraction completed but compiler binaries are missing in ${TOOLCHAIN_DIR}/bin")
+    endif()
 endif()
 
 set(CMAKE_C_COMPILER "${TOOLCHAIN_DIR}/bin/gcc.exe" CACHE FILEPATH "" FORCE)
@@ -143,7 +152,8 @@ FetchContent_MakeAvailable(nlohmann_json)
 # usb-hid-usage — two-file C library (Apache-2.0) — usage page/ID to human-readable name
 FetchContent_Declare(usbhidusage
     GIT_REPOSITORY https://github.com/smokris/usb-hid-usage.git
-    GIT_TAG        master
+    # Immutable revision: verify and update intentionally.
+    GIT_TAG        1a9085449bacdcbf3581b2ca694c0c158c3a8085
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(usbhidusage)
@@ -151,7 +161,8 @@ FetchContent_MakeAvailable(usbhidusage)
 # MinHook — unified inline hooking library
 FetchContent_Declare(minhook
     GIT_REPOSITORY https://github.com/TsudaKageyu/minhook.git
-    GIT_TAG        master
+    # Immutable revision: verify and update intentionally.
+    GIT_TAG        8af6b4acae5a9388fd742b56fa79ece89d96f823
     GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(minhook)
