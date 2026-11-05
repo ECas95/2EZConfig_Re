@@ -108,7 +108,7 @@ Every invocation starts reading at the beginning. **Re-running with --send will 
 7. Test repeated sessions, failures, delayed results, song IDs, game shutdown and actual XP compatibility.
 8. Provide a compatibility table and synthetic, rights-cleared sample data.
 
-See [NEW_HOOKS.md](NEW_HOOKS.md), [CUSTOM_SONGS.md](CUSTOM_SONGS.md), [SCORES_API.md](SCORES_API.md), [MULTIPLAYER.md](MULTIPLAYER.md) and the [adapter publisher shim](../examples/hooks/).
+See [NEW_HOOKS.md](NEW_HOOKS.md), [CUSTOM_SONGS.md](CUSTOM_SONGS.md), [SCORES_API.md](SCORES_API.md), [MULTIPLAYER.md](MULTIPLAYER.md) and the [adapter publisher shim](../examples/hooks/README.md).
 
 ## Known limitations
 
