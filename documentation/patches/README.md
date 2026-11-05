@@ -30,6 +30,7 @@ Basic format outline:
 | `type`        | string   | yes         | `"toggle"` or `"value"`                                                                                                                        |
 | `apply`       | string   | no          | `"super_early"` (before app executes), `"early"` (~10ms delay), or omit for default (~2s delay, good for patches that need initial game setup) |
 | `scan_group`  | array    | toggle only | Array of scan groups, each containing an optional `scan` pattern and a `writes` array. Allows one patch to target multiple code sites           |
+| `writes`      | array    | toggle only | Direct RVA writes without pattern matching; an alternative to `scan_group` for toggle patches |
 | `offset`      | string   | value only  | Single hex offset to write the selected value to                                                                                               |
 | `options`     | string[] | value only  | Dropdown options shown in UI, selected index is written to `offset`                                                                            |
 | `default`     | int      | no          | Default selected index for value patches                                                                                                       |
@@ -109,7 +110,7 @@ When a `scan` pattern is provided, offsets are relative to the matched location.
 
 #### Multi-Scan:
 
-A single patch can target multiple code sites by having multiple entries in the `scans` array. Each scan group is matched and patched independently. This is useful when one fix requires patching the same bug in multiple functions.
+A single patch can target multiple code sites by having multiple entries in the `scan_group` array. Each scan group is matched and patched independently. This is useful when one fix requires patching the same bug in multiple functions.
 
 ```json
 "fix_spotlight_obo": {
@@ -241,3 +242,15 @@ The `"apply"` field controls when the patch is written to memory:
 | `ez2dancer_uk`    | EZ2Dancer UK Move     |
 | `ez2dancer_uk_se` | EZ2Dancer UK Move SE  |
 | `ez2dancer_sc`    | EZ2Dancer Super China |
+| `3s_rb`            | Sabin Sound Star: Renascence Burst |
+
+
+### Validation and safety notes (fork documentation)
+
+- Back up the game directory and JSON settings before enabling any memory patches. A valid JSON file does **not** guarantee that the selected executable has the expected instructions.
+- Hex scan strings must contain byte pairs or `??` wildcards. The `...` placeholders shown in some abbreviated examples on this page are **illustrative, not valid scan syntax**; replace them with complete patterns.
+- `scan_group` is the name of the multi-scan array in the current implementation; `scans` is not a recognized substitute.
+- A pattern may match multiple places. The current code applies its writes to **every match**; it does not enforce uniqueness or verify expected original bytes.
+- Current memory-write code does not comprehensively check target bounds or the result of changing page protection. Treat patches for unrecognized or modified executables as unsafe until checked against that build.
+- The current parser can skip malformed patch JSON without a clear user-facing error. If custom patches do not appear, re-check JSON structure and consult [troubleshooting](../TROUBLESHOOTING.md).
+- To disable user patches for diagnosis, rename `user-patches.json` after backing it up. Built-in patches remain loaded from `%APPDATA%\\2ezconfig\\patches.json`.
