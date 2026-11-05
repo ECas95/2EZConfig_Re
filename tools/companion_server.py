@@ -219,6 +219,22 @@ def build_handler(state: CompanionState, token: str | None):
             self.end_headers()
             self.wfile.write(data)
 
+        def respond_dashboard(self):
+            path = Path(__file__).resolve().parent / "dashboard.html"
+            data = path.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy",
+                             "default-src 'none'; script-src 'unsafe-inline'; "
+                             "style-src 'unsafe-inline'; connect-src 'self'; "
+                             "form-action 'self'; base-uri 'none'")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
         def authorized(self):
             if token is None:
                 return True
@@ -226,6 +242,13 @@ def build_handler(state: CompanionState, token: str | None):
             return hmac.compare_digest(provided, f"Bearer {token}")
 
         def dispatch(self, method):
+            # The dashboard contains no private data. API endpoints remain
+            # protected by the optional bearer token supplied in the browser UI.
+            route = urlsplit(self.path)
+            path = route.path.rstrip("/")
+            if method == "GET" and path in {"", "/dashboard"}:
+                self.respond_dashboard()
+                return
             if not self.authorized():
                 self.respond(401, {"error": "authentication required"})
                 return
