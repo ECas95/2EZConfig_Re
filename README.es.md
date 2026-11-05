@@ -104,7 +104,7 @@ Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e inclu
 
 ## Documentación y próximos pasos
 
-La [documentación técnica en inglés](README.md#project-documentation-and-contributing) incluye instalación, compilación, arquitectura, ejemplos JSON, diagnóstico, contribuciones y el [roadmap](documentation/ROADMAP.md).
+La [documentación técnica en inglés](README.md#project-documentation-and-contributing) incluye instalación, compilación, arquitectura, ejemplos JSON, diagnóstico, contribuciones y el [roadmap](documentation/ROADMAP.md). También se incluyen una [guía para desarrolladores](documentation/DEVELOPER_GUIDE.md), [changelog](CHANGELOG.md) y [política de seguridad](SECURITY.md).
 
 El **diagnóstico HID en vivo** ya está integrado y hay un administrador de perfiles mediante comandos. Siguen pendientes la selección visual de perfiles, mapeo gráfico de E/S, inspección de compatibilidad de parches, hooks reales para canciones/scores y protección avanzada de las escrituras de memoria.
 
