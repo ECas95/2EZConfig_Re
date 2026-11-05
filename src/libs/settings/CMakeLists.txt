@@ -1,4 +1,4 @@
-add_library(settings settings.cpp)
+add_library(settings settings.cpp settings_io.cpp)
 
 target_include_directories(settings
     PUBLIC
