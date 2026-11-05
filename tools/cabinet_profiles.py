@@ -105,7 +105,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=["export", "diff", "apply"])
     parser.add_argument("--game-dir", default=".")
-    parser.add_argument("--global-file", help="Default: %APPDATA%/2ezconfig/global-settings.json")
+    parser.add_argument("--global-file", help="Default: %%APPDATA%%/2ezconfig/global-settings.json")
     parser.add_argument("--profile", required=True, help="Profile JSON input/output")
     parser.add_argument("--apply", action="store_true",
                         help="Required to write settings; without it apply is a dry run")
