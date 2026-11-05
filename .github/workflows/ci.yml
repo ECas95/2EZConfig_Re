@@ -1,0 +1,46 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate bundled JSON and CMake presets
+        run: |
+          python3 -m json.tool CMakePresets.json > /dev/null
+          python3 -m json.tool src/resources/patches.json > /dev/null
+
+  windows-build:
+    runs-on: windows-latest
+    needs: validate-json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Release (includes verified GCC download)
+        run: cmake --preset release
+      - name: Build Release
+        run: cmake --build --preset release --parallel 2
+      - name: Verify expected outputs
+        shell: pwsh
+        run: |
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll")) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "Missing output: $path" }
+            $file = Get-Item $path
+            if ($file.Length -eq 0) { throw "Empty output: $path" }
+            Write-Host "$path SHA256=$((Get-FileHash $path -Algorithm SHA256).Hash)"
+          }
+      - name: Publish unsigned CI artifacts (not a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2EZConfig-ci-win32
+          if-no-files-found: error
+          path: |
+            build/release/bin/2EZ.dll
+            build/release/bin/2EZConfig.exe
