@@ -141,6 +141,7 @@ static void setTheme();
 static void renderSettingsTab();
 static void gameCheckbox(const char* label, const char* key, bool defaultVal);
 static void renderButtonsTab();
+static void renderDiagnosticsTab();
 static void renderAnalogsTab();
 static void renderAnalogEditPopup(const std::vector<Device>& axisDevices);
 static void renderLightsTab();
@@ -397,6 +398,11 @@ static void renderUI() {
 
         if (ImGui::BeginTabItem("Patches")) {
             renderPatchesTab();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Diagnostics")) {
+            renderDiagnosticsTab();
             ImGui::EndTabItem();
         }
 
@@ -715,6 +721,59 @@ static void renderSettingsTab() {
         }
     }
 
+    ImGui::EndChild();
+}
+
+static void renderDiagnosticsTab() {
+    ImGui::TextDisabled("Live HID monitor - read-only. Use Lights to test output ports.");
+    ImGui::TextWrapped("Device values refresh while this tab is open. "
+                       "Some vendor-specific or older IO interfaces may not expose HID states.");
+    const auto devices = g_app.input->getDevices();
+    ImGui::Text("Detected input devices: %d", static_cast<int>(devices.size()));
+    ImGui::Separator();
+    ImGui::BeginChild("##diagnosticsScroll", ImVec2(0, ImGui::GetWindowHeight() - 120), false);
+    for (const auto& device : devices) {
+        ImGui::PushID(device.path.c_str());
+        if (ImGui::TreeNode(device.name.c_str())) {
+            ImGui::TextDisabled("Buttons %d | Axes %d | Outputs %d",
+                static_cast<int>(device.buttonCapsNames.size()),
+                static_cast<int>(device.valueCapsNames.size()),
+                static_cast<int>(device.buttonOutputCapsNames.size() +
+                                 device.valueOutputCapsNames.size()));
+            DeviceSnapshot snapshot;
+            if (g_app.input->snapshotDevice(device.path, snapshot)) {
+                const int buttonsShown = static_cast<int>(snapshot.buttons.size() < 96
+                    ? snapshot.buttons.size() : 96);
+                for (int i = 0; i < buttonsShown; ++i) {
+                    if (!snapshot.buttons[i]) continue;
+                    const char* label = i < static_cast<int>(device.buttonCapsNames.size())
+                        ? device.buttonCapsNames[i].c_str() : "Button";
+                    ImGui::BulletText("Pressed: %s [%d]", label, i);
+                }
+                const int axesShown = static_cast<int>(snapshot.values.size() < 24
+                    ? snapshot.values.size() : 24);
+                for (int i = 0; i < axesShown; ++i) {
+                    const char* label = i < static_cast<int>(device.valueCapsNames.size())
+                        ? device.valueCapsNames[i].c_str() : "Axis";
+                    ImGui::Text("%s [%d]: %.3f", label, i, snapshot.values[i]);
+                    float value = snapshot.values[i];
+                    const float normalized = value < 0 ? 0.0f : (value > 1 ? 1.0f : value);
+                    ImGui::ProgressBar(normalized, ImVec2(-1, 4), "");
+                }
+                if (static_cast<int>(snapshot.buttons.size()) > buttonsShown ||
+                    static_cast<int>(snapshot.values.size()) > axesShown) {
+                    ImGui::TextDisabled("Additional controls hidden to keep UI responsive.");
+                }
+            } else {
+                ImGui::TextDisabled("No live HID snapshot available.");
+            }
+            ImGui::TreePop();
+        }
+        ImGui::PopID();
+    }
+    if (devices.empty()) {
+        ImGui::TextDisabled("No compatible HID devices reported.");
+    }
     ImGui::EndChild();
 }
 
