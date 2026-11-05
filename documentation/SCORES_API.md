@@ -15,6 +15,10 @@ The default listens only on localhost without authentication. Binding to a nonlo
 python tools/companion_server.py --host 0.0.0.0 --port 8765 --token "REPLACE_WITH_LONG_RANDOM_SECRET"
 ~~~
 
+## Optional browser dashboard
+
+With the companion running, open **http://127.0.0.1:8765/dashboard**. The built-in HTML interface allows developers to submit sample scores, query the selected song/chart, explore hook events and exercise prototype lobby transitions. It uses only local static HTML/CSS/JavaScript, makes same-origin requests and saves no authorization token in browser storage. **All data is still unverified.** If the API uses a bearer token, enter it into the dashboard's connection field; the page is public static content but API requests remain authenticated.
+
 ## REST endpoints
 
 ### GET /health
