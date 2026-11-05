@@ -1,51 +1,54 @@
-# Static audit and modernization roadmap
+# Technical audit and modernization roadmap
 
-**Status: roadmap proposals; some fixes are in review, not yet in `master`.** Active work: [PR #2 build/CI](https://github.com/ECas95/2EZConfig_Re/pull/2), [PR #3 JSON recovery/tests](https://github.com/ECas95/2EZConfig_Re/pull/3) and [PR #4 controlled releases](https://github.com/ECas95/2EZConfig_Re/pull/4). This audit is based on reading the current fork source. It is not a report of executed builds, hardware tests or proven exploits. Each item requires independent reproduction and tests.
+Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
-## P0 — Reliability and safety
+## Integrated foundation
 
-| ID | Evidence | Proposed improvement | Definition of done |
-| --- | --- | --- | --- |
-| P0-01 | `src/libs/patches/patch_store.cpp`: raw memory writes without checking image boundaries or `VirtualProtect` success | Validate destination address, byte length, match counts and expected original bytes before writing | Invalid/ambiguous patches are rejected with explicit diagnostics |
-| P0-02 | `src/libs/settings/settings.cpp`: JSON deserialization without recovery, direct overwriting | Schema validation, migration, atomic saves, rolling backups, restore UI | Corrupted JSON retains last good settings and offers recovery |
-| P0-03 | `src/libs/injector/injector.cpp`: incomplete handle cleanup on failure, persistent remote allocation, unchecked remote-thread outcome | Audit process/handle lifecycle; propagate and display errors; bounded waits | Failure paths clean up resources, and launches report actionable outcomes |
-| P0-04 | `src/2ez-dll/dll.cpp`: substantial setup and thread creation during DLL attach | Reduce loader-lock work; carefully stage post-load initialization | No startup regressions on supported game families or XP target |
-
-## P1 — Engineering foundations
-
-| ID | Evidence | Proposed improvement | Definition of done |
-| --- | --- | --- | --- |
-| P1-01 | Root CMake downloads to absent `toolchain/` directory and does not verify the archive checksum | Create directory, pin SHA-256, support local/offline toolchain | Clean configure is repeatable and integrity checked |
-| P1-02 | `usb-hid-usage` and `minhook` reference moving `master` branches | Pin immutable commit IDs and document update policy | Repeated builds resolve identical source revisions |
-| P1-03 | Release workflow publishes on every `master` push, ZIP omits notices/checksums | PR-only CI; controlled release trigger, package notices and SHA-256 | Pull requests build without releases; release assets are verifiable |
-| P1-04 | `src/2ezconfig-exe/main.cpp` hosts extensive UI and launcher behavior | Split screens/settings/input/lights/patches into focused modules | Same UI behavior with isolated tests |
-| P1-05 | No dedicated test suite in repository tree | CTest for JSON, game metadata and patch definitions plus Windows smoke tests | Pull requests run automated tests; XP/hardware checks documented |
-| P1-06 | Unknown hashes default to first game selection | Explicitly mark unrecognized executables and request manual confirmation | Unknown executable is never presented as confidently auto-detected |
-
-## P2 — Proposed new features
-
-| New capability | Proposed behavior | Benefit |
+| Item | Implementation | Status |
 | --- | --- | --- |
-| **Cabinet Profile Manager** | Named presets per cabinet/game, export/import, diff and rollback | Quickly move between original IO, USB encoders, DIY controllers and testing |
-| **Device Diagnostics Lab** | Live HID input monitor, axis graphs, output lighting tests and reconnect indicators | Debug hardware without running the game |
-| **Visual IO Mapper** | Arcade control diagrams for EZ2DJ/AC, EZ2Dancer and Sabin | Map button/turntable/pedal/lighting hardware accurately |
-| **Patch Compatibility Inspector** | Verify recognized executable, patch schema, byte guards, overlapping writes and expected match counts | Prevent incompatible settings from silently corrupting runtime state |
-| **Setup Wizard** | Guided presets for Windows XP CRT cabinets and supported modern Windows setups | Reduce incompatible settings and setup errors |
-| **Settings Health Center** | Automated backups, profile migrations, recovery, setting diffs and privacy-redacted support bundle | Prevent configuration loss |
-| **HID Device Recovery** | Device reconnect and USB-port path-change remediation | More stable arcade operation |
-| **Display / Audio Inspector** | Report measured refresh/display mode and available audio backend | Verify environment rather than assuming 60 Hz |
-| **Accessibility / localization** | Adjustable UI scaling, English/Spanish interface, keyboard-first workflows | Better usability across different cabinets |
+| Windows build + PR CI | Toolchain directory creation, SHA-256 verification, pinned libraries, JSON validation and Windows artifacts ([PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2)) | **Merged; CI passed** |
+| JSON settings protection | Temporary file replacement, `.bak` backup, `.corrupt` recovery, warning display and CTest cases ([PR #3](https://github.com/ECas95/2EZConfig_Re/pull/3)) | **Merged; CI passed** |
+| Controlled releases | Publish only on version tags; distribute license notices and SHA-256 checksums ([PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4)) | **Merged; release packaging not yet proven by a tagged test release** |
+| Documentation | English + Spanish README, architecture, installation, build, troubleshooting, patch reference and contribution guide ([PR #1](https://github.com/ECas95/2EZConfig_Re/pull/1)) | Documented |
 
-## Suggested milestones
+## P0 — Remaining runtime safety work
 
-1. **M0 — Baseline:** Fix clean builds, dependency pinning, release hygiene; establish regression matrix.
-2. **M1 — Safety:** JSON backups/schema validation, patch preflight and improved diagnostics.
-3. **M2 — Modularity:** Isolate portable core, add automated tests and refactor UI.
-4. **M3 — Hardware tools:** Device Diagnostics Lab + Cabinet Profile Manager.
-5. **M4 — Advanced UX:** Visual mapper, setup wizard, compatibility inspector and localization.
+| ID | Evidence | Proposed change | Acceptance criteria |
+| --- | --- | --- | --- |
+| P0-01 | `src/libs/patches/patch_store.cpp` writes raw process memory without checking memory bounds or the result of `VirtualProtect` | Add preflight target/length checking, expected-original-byte guards, explicit error codes and guarded writes | Invalid, ambiguous or unsafe patch targets are rejected without memory modification |
+| P0-03 | `src/libs/injector/injector.cpp` has resource cleanup/error handling gaps | Audit process/remote allocation/thread handles, timeouts, exit codes and error propagation | Launch failures report concrete diagnostics and cleanup is verified |
+| P0-04 | `src/2ez-dll/dll.cpp` initializes complex systems from DLL attach | Minimize loader-lock-sensitive initialization while preserving early game timing | Startup remains stable across selected game/OS matrix |
+| P0-05 | Settings can be shared across multiple instances; no inter-process transaction coordination | Add multi-instance writer serialization and a recovery-friendly conflict policy | Concurrent saves do not silently overwrite newer settings |
 
-## Compatibility/test matrix
+**Notes on completed P0-02:** atomic-style saves, one last-good backup and corruption recovery are present. Full schema migrations, rolling history and a dedicated recovery manager UI are **not implemented**.
 
-Track **pass / fail / not tested** per combination: Windows XP SP3 32-bit and modern Windows; EZ2DJ/EZ2AC, EZ2Dancer, Sabin; keyboard, HID, mouse axes and original arcade IO; original versus modified executables; patches enabled/disabled; CRT/60 Hz configurations; WASAPI on Vista+ only. Do not describe an untested combination as compatible.
+## P1 — Maintenance and test coverage
 
-Each roadmap item should become a focused issue and pull request with reproducible acceptance criteria. Preserve upstream licensing and attribution.
+| ID | Proposed change | Acceptance criteria |
+| --- | --- | --- |
+| P1-01 | Support fully offline and externally supplied toolchains; add multi-target build reproducibility checks | Documented offline build succeeds without network access |
+| P1-04 | Extract `src/2ezconfig-exe/main.cpp` into separate UI modules | Same behavior with isolated screen/config tests |
+| P1-05 | Add patch-schema validation, game ID detection tests, HID integration and Windows XP SP3 smoke testing | Tests pass for malformed inputs and expected hardware behaviors |
+| P1-06 | Make unknown executable hashes explicit instead of silently selecting the first entry | Unknown game displayed as unrecognized until manual choice |
+| P1-07 | Verify the version-tag release workflow on a test tag; assess binary signing | Test release has complete ZIP, licenses and checksums |
+
+## P2 — Proposed user-facing capabilities (not implemented)
+
+| Feature | Proposal |
+| --- | --- |
+| **Cabinet Profile Manager** | Named setups per game/cabinet with import/export, comparison and one-click restore |
+| **Device Diagnostics Lab** | Live HID buttons/axes, turntable direction graphs, output lighting tests, device reconnect alerts |
+| **Visual IO Mapper** | Interactive button, turntable, pedal and lamp diagrams for EZ2DJ/AC, EZ2Dancer and Sabin |
+| **Patch Compatibility Inspector** | Patch preview, executable fingerprint checks, expected-byte guards, overlapping write detection |
+| **Guided Setup Wizard** | Distinct recommended paths for legacy CRT cabinets and supported modern Windows |
+| **Settings Health Center** | Versioned history, migrations, health warnings and privacy-safe support bundles |
+| **Display / Audio Inspector** | Actual refresh/driver reporting, sound backend and latency diagnostics |
+| **Localization and accessibility** | Adjustable UI scale, English/Spanish application UI and tested keyboard navigation |
+
+**Priority order:** patch-write preflight safety → injector lifecycle hardening → executable recognition and more tests → Device Diagnostics Lab → Cabinet Profile Manager → remaining UI modules.
+
+## Compatibility verification matrix
+
+Track **pass / fail / not tested** for Windows XP SP3 32-bit and current Windows; EZ2DJ/EZ2AC, EZ2Dancer and Sabin; known and modified game executables; keyboard, HID, mouse axes, original IO, CRT display modes, WASAPI on Vista+ only, first run and upgrades, and 6th Trax child-process behavior.
+
+A successful CI build is **not** evidence of validated hardware compatibility. Each roadmap change should include focused tests, captured reproducible results and relevant licensing/attribution preservation.
