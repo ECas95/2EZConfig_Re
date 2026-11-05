@@ -54,6 +54,19 @@ The [Pull Request CI](../.github/workflows/ci.yml) workflow runs on PRs targetin
 
 The settings tests cover first-run defaults, previous-valid-file backups, malformed JSON recovery, invalid backups, repeated corruption, and rejection of invalid JSON root types. Windows CI has passed for the implementation, but **does not validate Windows XP SP3, original arcade cabinets or every game revision**.
 
+## Companion tools and Python tests
+
+Optional developer tools require Python **3.10+** on a modern PC. They are not part of the XP game executable and use only Python's standard library.
+
+~~~powershell
+python -m unittest discover -s tools/tests -p 'test_*.py' -v
+python tools/companion_server.py --help
+python tools/songpack_validator.py --help
+python tools/cabinet_profiles.py --help
+~~~
+
+Pull Request CI runs these Python tests before the Windows build, then uses CTest to check both **settings_io_tests** and **extension_events_tests**. Run the same commands after a change to the companion API or the hook event format. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+
 ## Controlled releases
 
 The [Release workflow](../.github/workflows/release.yml) builds in Windows and publishes a GitHub Release **only for version tags** that match `vX.Y.Z` (or a suffix such as `vX.Y.Z-rc1`). Manual workflow dispatch builds artifacts without publishing unless invoked on an eligible tag.
