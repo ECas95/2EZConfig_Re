@@ -1,6 +1,6 @@
 # Static audit and modernization roadmap
 
-**Status: proposed, not implemented.** This audit is based on reading the current fork source. It is not a report of executed builds, hardware tests or proven exploits. Each item requires independent reproduction and tests.
+**Status: roadmap proposals; some fixes are in review, not yet in `master`.** Active work: [PR #2 build/CI](https://github.com/ECas95/2EZConfig_Re/pull/2), [PR #3 JSON recovery/tests](https://github.com/ECas95/2EZConfig_Re/pull/3) and [PR #4 controlled releases](https://github.com/ECas95/2EZConfig_Re/pull/4). This audit is based on reading the current fork source. It is not a report of executed builds, hardware tests or proven exploits. Each item requires independent reproduction and tests.
 
 ## P0 — Reliability and safety
 
