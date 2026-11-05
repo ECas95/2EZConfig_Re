@@ -8,7 +8,7 @@ Windows host; CMake **3.20+**; Git; MinGW Makefiles generator and supporting bui
 ~~~powershell
 git clone https://github.com/ECas95/2EZConfig_Re.git
 Set-Location 2EZConfig_Re
-# Work around current CMake omission: it downloads into a folder it has not created.
+# Backward-compatible workaround for upstream revisions before PR #2.
 New-Item -ItemType Directory -Force toolchain | Out-Null
 cmake --preset release
 cmake --build --preset release
@@ -16,7 +16,7 @@ cmake --build --preset release
 
 Debug: `cmake --preset debug` then `cmake --build --preset debug`. Expected binaries: `build/release/bin/2EZConfig.exe` and `build/release/bin/2EZ.dll` (debug equivalents under `build/debug/bin`).
 
-**These commands were reviewed against source but not executed on a Windows build machine in this audit.** Host-specific MinGW generator configuration may also be required.
+**Build validation:** [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) passed a clean Windows GitHub Actions build. The manual folder-creation workaround is no longer needed once that PR is integrated. XP cabinets and additional Windows versions still require separate verification.
 
 ## Dependencies
 
@@ -25,18 +25,18 @@ Debug: `cmake --preset debug` then `cmake --build --preset debug`. Expected bina
 | GLFW (+ local XP compatibility patch) | `3.3.10` |
 | Dear ImGui | `v1.91.1` |
 | nlohmann/json | `v3.11.3` |
-| usb-hid-usage | floating `master` |
-| MinHook | floating `master` |
-| MinGW toolchain | Upstream release archive, currently without checksum verification |
+| usb-hid-usage | floating `master` in original code; pinned commit in PR #2 |
+| MinHook | floating `master` in original code; pinned commit in PR #2 |
+| MinGW toolchain | Upstream release archive; PR #2 checks the release's SHA-256 digest |
 
-The project fetches code at configure time and is not reproducible/offline by default. Pin floating dependencies to commits, verify the toolchain archive with SHA-256, provide optional local toolchain paths, and cache dependencies.
+The original build fetches code at configure time. [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) pins floating dependencies and verifies the toolchain archive; full offline build support and hardware regression tests remain future work.
 
 ## Current GitHub Actions release behavior
-The workflow `.github/workflows/release.yml` starts on every push to `master` or manual dispatch. It builds on Windows, uploads executable + DLL, and produces a date-tagged GitHub Release from Ubuntu. The release zip contains **only** these two binaries (no license files or checksum).
+In the original workflow, every push to `master` triggers a dated GitHub Release containing only the two binaries. [PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4) proposes controlled version tags, bundled notices and SHA-256 checksums. Consult the merged workflow version before publishing.
 
-Recommended: introduce PR build/test jobs; release only on controlled tags; include LICENSE and third-party notices; add SHA-256 checksums and test evidence.
+[PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) adds PR build validation; [PR #3](https://github.com/ECas95/2EZConfig_Re/pull/3) adds settings recovery tests; [PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4) changes release packaging. These must be merged and validated before they are treated as capabilities of `master`.
 
 ## Test plan
-There is no dedicated automated test suite in the reviewed tree. At a minimum test: fresh/upgrade settings; malformed JSON; game detection with recognized/unknown executables; user patch override behavior; inputs/outputs; UI and skip-UI launches; 6th Trax switching; XP startup, modern Windows audio/rendering, and 60 Hz hardware behavior.
+The original reviewed tree contained no dedicated test suite. PR #3 adds CTest coverage for JSON settings; other coverage remains pending. At a minimum test: fresh/upgrade settings; malformed JSON; game detection with recognized/unknown executables; user patch override behavior; inputs/outputs; UI and skip-UI launches; 6th Trax switching; XP startup, modern Windows audio/rendering, and 60 Hz hardware behavior.
 
 See [Roadmap](ROADMAP.md).
