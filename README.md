@@ -76,7 +76,7 @@ To bypass the configuration window after setup, launch `2EZConfig.exe -skip-conf
 | **Diagnostics tab** | Monitor detected HID controls, pressed buttons and analog axes live | Does not decode undocumented original arcade IO boards |
 | [Cabinet profiles](documentation/CABINET_PROFILES.md) | Export, compare and explicitly restore game/global settings with backups | No GUI profile picker or automated HID path remapping yet |
 | [Song pack validator](documentation/CUSTOM_SONGS.md) | Validate original/licensed song manifests, paths, chart IDs and optional checksums | Does not install songs or charts into any proprietary game binary |
-| [Local score API](documentation/SCORES_API.md) | Post/query **unverified** scores stored in SQLite | Cannot currently extract actual arcade scores or certify gameplay |
+| [Local score API](documentation/SCORES_API.md) | Post/query **unverified** scores stored in SQLite; built-in local browser dashboard | Cannot currently extract actual arcade scores or certify gameplay |
 | [Lobby coordinator](documentation/MULTIPLAYER.md) | Local room, join, ready, start and result protocol for 2–4 players | Does not synchronize real games or provide online multiplayer in the arcade process |
 | [Event SDK](documentation/EXTENSION_EVENTS.md) | Opt-in JSONL events with a C ABI export in 2EZ.dll | Does not automatically identify song selection or result screens |
 
@@ -86,7 +86,7 @@ On a **modern PC with Python 3.10+**, start the companion:
 python tools/companion_server.py --host 127.0.0.1 --port 8765
 ~~~
 
-Check the health endpoint at http://127.0.0.1:8765/health. The server binds only to localhost by default. It is a development prototype, **not a public ranked score server**.
+Open the **local companion dashboard** at http://127.0.0.1:8765/dashboard to submit synthetic scores, inspect leaderboards, manage prototype lobbies and view events. The health check is at http://127.0.0.1:8765/health. The server binds only to localhost by default. It is a development prototype, **not a public ranked score server**.
 
 Preview a saved cabinet profile without applying it:
 
