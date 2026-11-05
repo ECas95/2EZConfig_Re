@@ -3,11 +3,21 @@
 #include <nlohmann/json.hpp>
 #include <cstdio>
 #include <fstream>
-#include <mutex>
 #include <string>
 
 namespace {
-std::mutex g_lock;
+// This MinGW/GCC toolchain uses win32 threads without std::mutex support.
+// Win32 interlocked operations are available on the XP target.
+volatile LONG g_lock = 0;
+class ScopedEventLock {
+public:
+    ScopedEventLock() {
+        while (InterlockedCompareExchange(&g_lock, 1, 0) != 0) Sleep(1);
+    }
+    ~ScopedEventLock() { InterlockedExchange(&g_lock, 0); }
+    ScopedEventLock(const ScopedEventLock&) = delete;
+    ScopedEventLock& operator=(const ScopedEventLock&) = delete;
+};
 bool g_enabled = false;
 std::string g_path;
 std::string g_gameId;
@@ -42,14 +52,14 @@ std::string utcTimestamp() {
 void ExtensionEvents::configure(const std::string& gameDirectory,
                                 const std::string& gameId,
                                 bool enabled) {
-    std::lock_guard<std::mutex> guard(g_lock);
+    ScopedEventLock guard;
     g_enabled = enabled && !gameDirectory.empty() && !gameId.empty();
     g_path = g_enabled ? gameDirectory + "\\2ez-events.jsonl" : "";
     g_gameId = g_enabled ? gameId : "";
 }
 
 bool ExtensionEvents::isEnabled() {
-    std::lock_guard<std::mutex> guard(g_lock);
+    ScopedEventLock guard;
     return g_enabled;
 }
 
@@ -63,7 +73,7 @@ bool ExtensionEvents::publish(const char* eventName, const char* jsonObjectPaylo
         const auto data = nlohmann::json::parse(
             jsonObjectPayload, jsonObjectPayload + length);
         if (!data.is_object()) return false;
-        std::lock_guard<std::mutex> guard(g_lock);
+        ScopedEventLock guard;
         if (!g_enabled) return false;
         const nlohmann::json record = {
             {"schema_version", 1},
