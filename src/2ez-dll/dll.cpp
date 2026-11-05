@@ -28,8 +28,17 @@ extern "C" {
 #include "audio_eq.h"
 #include "hypersonik_hook.h"
 #include "hooks.h"
+#include "extension_events.h"
 
 extern "C" __declspec(dllexport) void hook_init(void) {}
+
+// Stable C-ABI event entry point for authorized, per-game add-on hooks.
+// Returns 1 if queued to the local JSONL spool; 0 if disabled/invalid/error.
+extern "C" __declspec(dllexport) int __cdecl EZ2_PublishEvent(
+    const char* eventName, const char* jsonObjectPayload) {
+    return ExtensionEvents::publish(eventName, jsonObjectPayload) ? 1 : 0;
+}
+
 
 static InputManager* s_input = nullptr;
 static BindingStore s_bindings;
@@ -78,6 +87,9 @@ static DWORD WINAPI InitThread(void*) {
         return 0;
     }
 
+    ExtensionEvents::configure(s_currDirectory, s_gameId,
+        s_settings->gameSettings().value("extension_events_enabled", false));
+
     if (s_settings->globalSettings().value("high_priority", false)){
         SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
         Logger::info("[+] High Priority process initialised");
@@ -119,6 +131,8 @@ static DWORD WINAPI InitThread(void*) {
     
     s_settings->patchStore().applyPatches(s_gameId);
 
+    // Lifecycle signal only. Score and song hooks require per-title adapters.
+    ExtensionEvents::publish("runtime.ready", "{\"stage\":\"post_patches\"}");
     return 0;
 }
 

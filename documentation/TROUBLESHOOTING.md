@@ -17,6 +17,20 @@
 | Settings cannot be saved | Check folder permissions, read-only files, antivirus locks and that the archive/backup location is writable. The UI reports save failures. |
 | Build errors | Check CMake 3.20+, MinGW Makefiles, 7-Zip fallback, Git network access, and toolchain hash validation. See [BUILDING.md](BUILDING.md). |
 
+## Extension and companion diagnostics
+
+| Symptom | What to check |
+| --- | --- |
+| No Diagnostics input | The tab displays HID snapshots; an original IO board may not expose HID device capabilities. Check Buttons bindings separately. |
+| No 2ez-events.jsonl | Event capture defaults to off; enable it under Settings → Debug Settings and relaunch the game. Only runtime.ready is emitted automatically. |
+| Custom song pack validates but does not appear in game | Expected. The validator does **not** load assets into the game. A verified version-specific loader has not been implemented. |
+| Scoreboard is empty | The companion does not read game scores automatically; submit synthetic/manual data for local tests only. |
+| Lobby created but games do not synchronize | Expected. Lobbies coordinate protocol state only; they do not hook the game's start timing. |
+| Companion refused remote binding | Remote listening requires a bearer token; for untrusted networks a TLS reverse proxy/VPN and authentication are necessary. |
+| Profile restore mismatch | Shut down the game/configurator, inspect the diff, confirm both game and global JSON were applied and restore the prior .bak if necessary. |
+
+See [EXTENSION_EVENTS.md](EXTENSION_EVENTS.md), [SCORES_API.md](SCORES_API.md) and [MULTIPLAYER.md](MULTIPLAYER.md).
+
 ## Recovering settings
 
 Current save logic writes a temporary file in the same directory and replaces the settings file after preparing a `.bak` copy of the previous valid content. **This is a last-good backup, not a multi-version history.** A malformed JSON file or a non-object root is moved aside rather than silently discarded. If preserving it fails, startup should report the error instead of proceeding.

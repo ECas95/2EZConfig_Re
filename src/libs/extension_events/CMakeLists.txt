@@ -1,0 +1,3 @@
+add_library(extension_events extension_events.cpp)
+target_include_directories(extension_events PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(extension_events PUBLIC nlohmann_json::nlohmann_json)

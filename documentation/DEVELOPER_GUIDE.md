@@ -1,0 +1,84 @@
+# Developer guide and verification matrix
+
+## Scope and project philosophy
+
+This is a Windows XP-targeted x86/C++17 arcade configuration and hooking project. Compatibility must be based on **an exact game executable build, expected machine behavior and recorded tests**, not names alone. Never treat unknown memory offsets or a matching file name as proof of safe patching.
+
+Architectural details: [ARCHITECTURE.md](ARCHITECTURE.md), [NEW_HOOKS.md](NEW_HOOKS.md), [EXTENSION_EVENTS.md](EXTENSION_EVENTS.md).
+
+## Local build (Windows)
+
+Requires CMake 3.20+, Git and an appropriate MinGW Makefiles build environment. The versioned compiler archive is checked against its upstream SHA-256 and dependencies are pinned.
+
+~~~powershell
+cmake --preset release
+cmake --build --preset release
+ctest --test-dir build/release --output-on-failure
+~~~
+
+Expected outputs: build/release/bin/2EZConfig.exe and build/release/bin/2EZ.dll.
+
+## Optional Python tools (3.10+ modern host)
+
+All companion tools currently use the standard library only:
+
+~~~powershell
+python -m unittest discover -s tools/tests -p 'test_*.py' -v
+python tools/companion_server.py --help
+python tools/songpack_validator.py --help
+python tools/cabinet_profiles.py --help
+python tools/event_bridge.py --help
+~~~
+
+The companion server's HTTP tests bind only to localhost. They use temporary SQLite files and do not need game assets or arcades.
+
+## How the CI runs
+
+A pull request to master starts:
+
+1. JSON syntax validation of CMakePresets.json and bundled patches.json.
+2. Python regression tests for the companion API, lobby states, song manifest paths and profiles.
+3. Windows CMake configure + Release build using the verified toolchain.
+4. CTest for settings recovery and local extension event JSONL.
+5. Verification of EXE/DLL presence and upload of unsigned build artifacts.
+
+**CI success is not a release** and is not verification of Windows XP or real games. Tagged releases are built through a separate workflow.
+
+## Minimum regression matrix
+
+| Area | Positive case | Failure case | Evidence required |
+| --- | --- | --- | --- |
+| Settings | Save and reload valid game/global files | Corrupt main, corrupt backup, unwritable directory | CI CTest + manual Windows check |
+| HID | Press/release inputs and move axes | Disconnect device or unknown caps | Synthetic tests + hardware |
+| Display/audio | Expected modes and audio backends | Unsupported mode, no WASAPI on XP | Game/build/OS screenshots and logs |
+| Existing game patch | Verified pattern and known target | Nonmatching pattern or mismatched revision | Mock tests and controlled hardware |
+| Event spool | Enabled, valid JSON object and known game ID | Disabled, invalid JSON, file permission failure | CTest and log inspection |
+| Score API | Known chart ID and score stored locally | Invalid score, unknown identifiers, malformed JSON | Python HTTP tests |
+| Multiplayer | Two ready players, valid host, submitted scores | Full lobby, duplicate finish, wrong host | Python HTTP tests |
+| Custom songs | Original test manifest passes | Traversal, symlink escape, hash mismatch | Python validator tests |
+| Profiles | Export, diff, dry run and explicit apply | Corrupt JSON or unsafe override | Python tests and backup inspection |
+| Actual custom-song hook | Original chart plays on a specified game build | Missing asset, wrong checksum, unsupported version | **Not yet implemented/tested** |
+| Actual results hook | One event for a completed, verified song | Duplicate, crash, premature results, invalid score | **Not yet implemented/tested** |
+| Actual networked gameplay | Matching chart sessions on two cabinets | Latency, reconnect, timing drift | **Not yet implemented/tested** |
+
+## Writing a game adapter
+
+- Keep one adapter per exact executable fingerprint and game family.
+- Document inputs, expected original bytes, safe fallback and state machine.
+- Prefer observing an authoritative semantic transition over polling untrusted memory.
+- Do not block graphics, audio or input callbacks with network/file IO.
+- Publish small events through the existing C ABI only after verifying a stable gameplay point.
+- Feature toggles must fail open, and a missing DLL, missing config or offline companion must not block normal play.
+- Build synthetic fixtures for new result/chart hooks; preserve release asset rights.
+
+## Community contribution checklist
+
+Before opening a PR:
+- Explain which game/build/OS/hardware is covered and which remains untested.
+- Add a focused unit test, fixture or safe reproduction path.
+- Verify no paid/copyrighted song/asset is included without rights.
+- Do not introduce plaintext secrets, hidden network connections, third-party telemetry or automatic uploads.
+- Preserve upstream GPL-3.0-or-later and third-party notices.
+- Update user docs, changelog and compatibility matrix if behavior changes.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md) and [ROADMAP.md](ROADMAP.md).

@@ -11,6 +11,22 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 | Controlled releases | Publish only on version tags; distribute license notices and SHA-256 checksums ([PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4)) | **Merged; release packaging not yet proven by a tagged test release** |
 | Documentation | English + Spanish README, architecture, installation, build, troubleshooting, patch reference and contribution guide ([PR #1](https://github.com/ECas95/2EZConfig_Re/pull/1)) | Documented |
 
+## Extensions platform v1 (implemented prototype)
+
+| Area | Implemented now | Still required for real game support |
+| --- | --- | --- |
+| Hardware diagnostics | Live, read-only HID button/axis tab | Original arcade board protocol adapters and reconnect tests |
+| Event hooks | Opt-in 2EZ.dll C ABI, runtime.ready event and local JSONL file | Verified per-game song-selected/result-finalized adapters |
+| Custom songs | Rights-cleared pack manifest validation with safe path and optional SHA-256 checks | Catalog, resource and chart loader by exact executable version |
+| Scores | Local SQLite HTTP API, unverified submissions/leaderboards and last-100-event viewer | Authentic result capture, account auth, deduplication, anti-cheat, HTTPS hosting |
+| Multiplayer | Prototype lobby join, ready, start and finish states | In-game session coordination, player identity and real synchronization |
+| Profiles | Offline export/diff/explicit apply with backups | GUI manager, controller remapping, transactional multi-file restore |
+| Community | Security policy, changelog, issue/PR templates, developer tests and case-study docs | Compatibility reports from real XP cabinets and tested game builds |
+
+**Development branch:** [PR #5](https://github.com/ECas95/2EZConfig_Re/pull/5). This is an opt-in extension platform milestone; gameplay hooks beyond runtime.ready remain proposed. The companion is for a modern Python 3.10+ host, not the Windows XP game process.
+
+**Use-case guides:** [new hooks](NEW_HOOKS.md), [event SDK](EXTENSION_EVENTS.md), [custom songs](CUSTOM_SONGS.md), [score API](SCORES_API.md), [multiplayer](MULTIPLAYER.md), [cabinet profiles](CABINET_PROFILES.md) and [developer verification](DEVELOPER_GUIDE.md).
+
 ## P0 — Remaining runtime safety work
 
 | ID | Evidence | Proposed change | Acceptance criteria |
@@ -28,7 +44,7 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 | --- | --- | --- |
 | P1-01 | Support fully offline and externally supplied toolchains; add multi-target build reproducibility checks | Documented offline build succeeds without network access |
 | P1-04 | Extract `src/2ezconfig-exe/main.cpp` into separate UI modules | Same behavior with isolated screen/config tests |
-| P1-05 | Add patch-schema validation, game ID detection tests, HID integration and Windows XP SP3 smoke testing | Tests pass for malformed inputs and expected hardware behaviors |
+| P1-05 | Expand initial CTest/Python suite with patch-schema validation, game ID detection, HID integration and Windows XP SP3 smoke testing | Tests pass for malformed inputs and expected hardware behaviors |
 | P1-06 | Make unknown executable hashes explicit instead of silently selecting the first entry | Unknown game displayed as unrecognized until manual choice |
 | P1-07 | Verify the version-tag release workflow on a test tag; assess binary signing | Test release has complete ZIP, licenses and checksums |
 

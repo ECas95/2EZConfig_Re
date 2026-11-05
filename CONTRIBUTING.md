@@ -2,6 +2,18 @@
 
 This is a community fork of [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Please retain upstream attribution, the [project license](LICENSE), and [third-party notices](THIRD_PARTY_LICENSES).
 
+## Developer references
+
+- [Development and test matrix](documentation/DEVELOPER_GUIDE.md)
+- [Extension SDK and event contract](documentation/EXTENSION_EVENTS.md)
+- [Proposed new hooks and compatibility registry](documentation/NEW_HOOKS.md)
+- [Song pack manifest validation](documentation/CUSTOM_SONGS.md)
+- [Score API and trust limits](documentation/SCORES_API.md)
+- [Multiplayer protocol experiments](documentation/MULTIPLAYER.md)
+- [Security disclosure](SECURITY.md) and [changelog](CHANGELOG.md)
+
+Contributions that introduce new game hooks must identify the **exact executable fingerprint**, verify the callback timing and safely reject unsupported revisions. Never publish restricted media or commercial game assets to reproduce a bug. Companion API and offline utilities require tests, bounded input validation and explicit consent before network transfer.
+
 ## Changes and pull requests
 
 1. Search issues and the [modernization roadmap](documentation/ROADMAP.md) before starting work.
