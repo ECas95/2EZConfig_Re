@@ -37,7 +37,7 @@ Settings are stored in `game-settings.json` (working/game directory), `%APPDATA%
 
 ## Build (Windows)
 
-Requires CMake 3.20+, Git, a working MinGW Makefiles environment, network access for FetchContent, and a suitable 7z extractor if needed. The current CMake file downloads an XP-targeted MinGW GCC 12.2 toolchain. **Known limitation:** create `toolchain/` before the first configure because current CMake does not create the archive's parent directory.
+Requires CMake 3.20+, Git, a working MinGW Makefiles environment, network access for FetchContent, and a suitable 7z extractor if needed. The current CMake file downloads an XP-targeted MinGW GCC 12.2 toolchain. **Legacy-build note:** upstream revisions require creating `toolchain/` before first configure. [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) adds automatic directory creation, a verified toolchain hash and pinned dependencies.
 
 ~~~powershell
 New-Item -ItemType Directory -Force toolchain | Out-Null
@@ -45,7 +45,7 @@ cmake --preset release
 cmake --build --preset release
 ~~~
 
-Expected outputs: `build/release/bin/2EZConfig.exe` and `build/release/bin/2EZ.dll`. These are documented build commands, not a claim of a verified build in this review. See [BUILDING.md](documentation/BUILDING.md).
+Expected outputs: `build/release/bin/2EZConfig.exe` and `build/release/bin/2EZ.dll`. The corrected build has passed Windows GitHub Actions on [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2); Windows XP hardware remains untested. See [BUILDING.md](documentation/BUILDING.md).
 
 ## Safety, upstream and licensing
 
