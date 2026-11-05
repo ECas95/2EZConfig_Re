@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>2EZ Companion — Local Lab</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#eaf0f7;background:#09131e}
+*{box-sizing:border-box}body{margin:0}header{padding:28px clamp(16px,4vw,50px);background:linear-gradient(125deg,#172b42,#0a1723);border-bottom:1px solid #294358}
+main{max-width:1180px;margin:0 auto;padding:26px 18px 70px}
+h1{margin:0;font-size:clamp(1.7rem,3vw,2.5rem);letter-spacing:-.03em}h2{font-size:1.2rem;margin:0 0 12px}
+header p,.muted{color:#acbdce}.warn{color:#ffd69b}.good{color:#9eeec6}
+.tag{display:inline-block;border:1px solid #3b6884;color:#b8dcfa;border-radius:20px;padding:3px 10px;font-size:.8rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.card{background:#132436;border:1px solid #29445e;border-radius:12px;padding:20px;box-shadow:0 10px 40px #0002}
+.full{grid-column:1/-1}
+label{display:block;margin:12px 0 4px;font-size:.86rem;color:#c3d4e6}
+input,select{background:#0b1a29;color:#f3f7ff;border:1px solid #405f77;border-radius:7px;padding:11px;width:100%;font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid #79cae9;outline-offset:2px}
+button{cursor:pointer;background:#2c88a8;border:1px solid #54acc6;color:#fff;font:inherit;border-radius:7px;padding:10px 14px;margin-top:12px;font-weight:650}
+button:hover{background:#357f9e}.alt{background:#263f58;border-color:#516b84}.danger{color:#ffc4ad}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.wide{grid-column:1/-1}
+.small{font-size:.83rem}pre{background:#0b1927;border:1px solid #304b63;white-space:pre-wrap;overflow-wrap:anywhere;max-height:250px;overflow:auto;padding:12px;border-radius:7px;font-size:.79rem}
+.status{margin-top:10px;min-height:20px;font-size:.9rem}.list{display:grid;gap:8px;max-height:260px;overflow:auto}
+.item{padding:10px 12px;background:#0c1e2e;border-radius:7px;border:1px solid #254057;overflow-wrap:anywhere}
+.item strong{color:#9fe1f4}table{width:100%;border-collapse:collapse;font-size:.88rem}
+td,th{text-align:left;padding:9px 6px;border-bottom:1px solid #33485e}th{color:#b1c7da;font-weight:500}
+@media(max-width:530px){.fields{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">LOCAL DEVELOPMENT LAB • v0.1</span>
+  <h1>2EZ <span style="color:#86d9ed">Companion</span></h1>
+  <p>Explore prototype arcade scores, lobby coordination and hook event envelopes on your own machine.</p>
+  <p class="warn small">Unverified scores · No in-game song loading · No synchronized multiplayer · No internet service</p>
+</header>
+<main>
+<div class="grid">
+<section class="card full">
+<h2>Connection</h2>
+<p class="muted small">Runs on the same origin as the local Python companion. The bearer token is kept in this page's memory only and never saved.</p>
+<div class="fields">
+<div><label for="token">Bearer token (only if configured)</label><input type="password" id="token" autocomplete="off" placeholder="Optional on localhost"></div>
+<div><label>Service state</label><div id="health" class="status">Not checked</div></div>
+</div>
+<button id="checkHealth" class="alt">Check connection</button>
+<span id="error" class="status danger" role="status" aria-live="polite"></span>
+</section>
+<section class="card">
+<h2>Submit a synthetic score</h2>
+<p class="muted small">Data is stored in SQLite as <strong>verified=false</strong>; it is not captured from the game.</p>
+<form id="scoreForm" class="fields">
+<div><label for="sgame">Game ID</label><input required id="sgame" value="ez2dj_7th"></div>
+<div><label for="ssong">Song ID</label><input required id="ssong" value="original_demo"></div>
+<div><label for="schart">Chart ID</label><input required id="schart" value="5k_n"></div>
+<div><label for="splayer">Player ID</label><input required id="splayer" value="local_p1"></div>
+<div><label for="sscore">Score</label><input required id="sscore" type="number" min="0" max="1000000000" value="812345"></div>
+<div><label for="sclear">Clear type</label><select id="sclear"><option>unknown</option><option>failed</option><option selected>clear</option><option>full_combo</option><option>perfect</option></select></div>
+<div class="wide"><button type="submit">Submit local score</button><span id="scoreState" class="status" role="status"></span></div>
+</form>
+</section>
+<section class="card">
+<h2>Leaderboard</h2>
+<p class="muted small">Uses the same game/song/chart currently selected in the score form.</p>
+<button id="refreshBoard" class="alt">Refresh leaderboard</button>
+<div id="leaderboard" class="list" style="margin-top:14px">No results loaded</div>
+</section>
+<section class="card">
+<h2>Multiplayer lab</h2>
+<p class="muted small">Prototype lobby states only. No connection to real arcade game start timing.</p>
+<form id="lobbyForm" class="fields">
+<div><label for="lplayer">Host player ID</label><input id="lplayer" required value="cabinet_p1"></div>
+<div><label for="lmode">Mode label</label><select id="lmode"><option>versus</option><option>coop</option></select></div>
+<div><label for="lmax">Max players</label><select id="lmax"><option>2</option><option>3</option><option>4</option></select></div>
+<div class="wide"><button type="submit">Create room with score-form song</button></div>
+</form>
+<div class="fields">
+<div><label for="roomId">Room ID</label><input id="roomId" placeholder="From create / room list"></div>
+<div><label for="roomPlayer">Player ID for operation</label><input id="roomPlayer" value="cabinet_p2"></div>
+<div><label for="roomAction">Action</label><select id="roomAction"><option>join</option><option>ready</option><option>start</option><option>finish</option></select></div>
+<div><label for="roomScore">Finish score</label><input id="roomScore" type="number" min="0" max="1000000000" value="700000"></div>
+<div class="wide"><button id="doAction" type="button" class="alt">Apply room action</button><button id="viewRoom" type="button" class="alt">View room</button></div>
+</div>
+<pre id="roomResult">No room loaded.</pre>
+</section>
+<section class="card">
+<h2>Hook event viewer</h2>
+<p class="muted small">Shows only events explicitly submitted to this companion, up to the last 100. The injected DLL never sends network requests.</p>
+<button id="refreshEvents" class="alt">Refresh events</button>
+<div id="events" class="list" style="margin-top:14px">No events loaded</div>
+</section>
+</div>
+<p class="muted small" style="margin-top:22px">2EZConfig_Re • GPL-3.0-or-later • Development interface. See documentation/SCORES_API.md and documentation/MULTIPLAYER.md.</p>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const value=id=>$(id).value.trim();
+function message(id,text,good){$(id).textContent=text;$(id).className="status "+(good?"good":"danger")}
+async function api(method,path,payload){
+  const headers={};const token=value("token");
+  if(token)headers.Authorization="Bearer "+token;
+  if(payload!==undefined)headers["Content-Type"]="application/json";
+  const response=await fetch(path,{method,headers,body:payload===undefined?undefined:JSON.stringify(payload),cache:"no-store"});
+  let content={};try{content=await response.json()}catch(_){}
+  if(!response.ok)throw new Error(content.error||"HTTP "+response.status);
+  return content;
+}
+async function act(fn){
+  try{$("error").textContent="";await fn()}catch(err){message("error",String(err.message||err),false)}
+}
+function clear(el){el.replaceChildren()}
+function addMessage(el,title,details){
+  const div=document.createElement("div");div.className="item";
+  const strong=document.createElement("strong");strong.textContent=title;
+  const body=document.createElement("span");body.textContent=" "+details;
+  div.append(strong,body);el.append(div);
+}
+async function health(){const data=await api("GET","/health");message("health",data.name+" "+data.version+" — "+data.status,true)}
+function songFields(){return {game_id:value("sgame"),song_id:value("ssong"),chart_id:value("schart")}}
+async function board(){
+  const params=new URLSearchParams({...songFields(),limit:"20"});
+  const result=await api("GET","/api/v1/leaderboard?"+params.toString());
+  const el=$("leaderboard");clear(el);
+  if(!result.entries.length){addMessage(el,"No scores","Submit a synthetic score to test locally.");return}
+  result.entries.forEach((e,i)=>addMessage(el,"#"+(i+1)+" "+e.player_id,String(e.score)+" • "+e.clear_type+" • UNVERIFIED"));
+}
+async function events(){
+ const data=await api("GET","/api/v1/events");const el=$("events");clear(el);
+ if(!data.events.length){addMessage(el,"No events","Enable event capture / send synthetic events first.");return}
+ data.events.slice().reverse().forEach(e=>addMessage(el,e.event,e.game_id+" • "+JSON.stringify(e.data)));
+}
+async function room(){const id=value("roomId");if(!id)throw new Error("Enter a room ID");const data=await api("GET","/api/v1/lobbies/"+encodeURIComponent(id));$("roomResult").textContent=JSON.stringify(data,null,2)}
+$("checkHealth").addEventListener("click",()=>act(health));
+$("refreshBoard").addEventListener("click",()=>act(board));
+$("refreshEvents").addEventListener("click",()=>act(events));
+$("scoreForm").addEventListener("submit",e=>{e.preventDefault();act(async()=>{
+ const data=await api("POST","/api/v1/scores",{...songFields(),player_id:value("splayer"),
+ score:Number(value("sscore")),clear_type:value("sclear")});
+ message("scoreState","Saved #"+data.id+" • unverified",true);await board();
+})});
+$("lobbyForm").addEventListener("submit",e=>{e.preventDefault();act(async()=>{
+ const data=await api("POST","/api/v1/lobbies",{...songFields(),player_id:value("lplayer"),
+ mode:value("lmode"),max_players:Number(value("lmax"))});
+ $("roomId").value=data.room_id;$("roomResult").textContent=JSON.stringify(data,null,2);
+})});
+$("viewRoom").addEventListener("click",()=>act(room));
+$("doAction").addEventListener("click",()=>act(async()=>{
+ const id=value("roomId"),action=value("roomAction"),player=value("roomPlayer");
+ if(!id||!player)throw new Error("Room and player IDs required");
+ const payload={player_id:player};
+ if(action==="ready")payload.ready=true;
+ if(action==="finish")payload.score=Number(value("roomScore"));
+ const data=await api("POST","/api/v1/lobbies/"+encodeURIComponent(id)+"/"+action,payload);
+ $("roomResult").textContent=JSON.stringify(data,null,2);
+}));
+act(async()=>{await health();await board();await events()});
+</script>
+</body></html>
