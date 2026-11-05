@@ -1,42 +1,70 @@
-# Building and release pipeline
+# Build, test and release guide
 
-## Requirements
-Windows host; CMake **3.20+**; Git; MinGW Makefiles generator and supporting build tools; network access for dependencies. The project configures 32-bit MinGW GCC 12.2 with XP-targeted flags and C++17. If the downloaded 7z archive is not supported by CMake's archive extractor, install 7-Zip and make `7z` available on PATH.
+This guide describes the **current code in `master`**. The project is a legacy-oriented Windows C/C++ application with CMake 3.20+, a 32-bit GCC 12.2 toolchain and C++17.
 
-## Build (PowerShell)
+## Prerequisites
 
-~~~powershell
+- Windows build environment with CMake **3.20+**, Git and the MinGW Makefiles generator/build tools.
+- Network access for the initial toolchain and FetchContent downloads (or a previously prepared compatible build cache).
+- 7-Zip (`7z` on PATH) if the CMake archive extraction path does not support the toolchain 7z file.
+
+## Build and tests (PowerShell)
+
+```powershell
 git clone https://github.com/ECas95/2EZConfig_Re.git
 Set-Location 2EZConfig_Re
-# Backward-compatible workaround for upstream revisions before PR #2.
-New-Item -ItemType Directory -Force toolchain | Out-Null
 cmake --preset release
 cmake --build --preset release
-~~~
+ctest --test-dir build/release --output-on-failure
+```
 
-Debug: `cmake --preset debug` then `cmake --build --preset debug`. Expected binaries: `build/release/bin/2EZConfig.exe` and `build/release/bin/2EZ.dll` (debug equivalents under `build/debug/bin`).
+Outputs:
 
-**Build validation:** [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) passed a clean Windows GitHub Actions build. The manual folder-creation workaround is no longer needed once that PR is integrated. XP cabinets and additional Windows versions still require separate verification.
+```text
+build/release/bin/2EZConfig.exe
+build/release/bin/2EZ.dll
+```
 
-## Dependencies
+Debug: use `cmake --preset debug` and `cmake --build --preset debug`; outputs are under `build/debug/bin/`.
 
-| Dependency | Current reference |
+**The `toolchain/` directory is created automatically on a fresh checkout.** On first configure, the project's MinGW toolchain archive is downloaded from the upstream `toolchain` release, and CMake verifies the SHA-256 `d76daf7a176f6e65ff75adc26efbadba89787bb14265696b94dce302cf1f8115`. For an alternate local toolchain, CMake exposes `TOOLCHAIN_DIR`; the provided compiler directory must contain `bin/gcc.exe`, `bin/g++.exe` and the appropriate resource compiler.
+
+## Build dependencies
+
+| Library or tool | Reference |
 | --- | --- |
-| GLFW (+ local XP compatibility patch) | `3.3.10` |
+| GLFW | `3.3.10` + `patches/glfw-xp-compat.patch` |
 | Dear ImGui | `v1.91.1` |
 | nlohmann/json | `v3.11.3` |
-| usb-hid-usage | floating `master` in original code; pinned commit in PR #2 |
-| MinHook | floating `master` in original code; pinned commit in PR #2 |
-| MinGW toolchain | Upstream release archive; PR #2 checks the release's SHA-256 digest |
+| usb-hid-usage | `1a9085449bacdcbf3581b2ca694c0c158c3a8085` |
+| MinHook | `8af6b4acae5a9388fd742b56fa79ece89d96f823` |
+| MinGW GCC 12.2 32-bit | Official upstream archive, verified by SHA-256 |
 
-The original build fetches code at configure time. [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) pins floating dependencies and verifies the toolchain archive; full offline build support and hardware regression tests remain future work.
+Dependencies are pinned to specific revisions, but the build still fetches source code during configure; fully offline builds are not yet a guaranteed workflow. Review dependency upgrades for Windows XP API compatibility.
 
-## Current GitHub Actions release behavior
-In the original workflow, every push to `master` triggers a dated GitHub Release containing only the two binaries. [PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4) proposes controlled version tags, bundled notices and SHA-256 checksums. Consult the merged workflow version before publishing.
+## Continuous integration
 
-[PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) adds PR build validation; [PR #3](https://github.com/ECas95/2EZConfig_Re/pull/3) adds settings recovery tests; [PR #4](https://github.com/ECas95/2EZConfig_Re/pull/4) changes release packaging. These must be merged and validated before they are treated as capabilities of `master`.
+The [Pull Request CI](../.github/workflows/ci.yml) workflow runs on PRs targeting `master`:
 
-## Test plan
-The original reviewed tree contained no dedicated test suite. PR #3 adds CTest coverage for JSON settings; other coverage remains pending. At a minimum test: fresh/upgrade settings; malformed JSON; game detection with recognized/unknown executables; user patch override behavior; inputs/outputs; UI and skip-UI launches; 6th Trax switching; XP startup, modern Windows audio/rendering, and 60 Hz hardware behavior.
+1. Validate `CMakePresets.json` and `src/resources/patches.json` syntax.
+2. Configure and compile on a Windows runner.
+3. Run `ctest` to exercise `settings_io_tests`.
+4. Verify the EXE and DLL exist and are nonempty.
+5. Upload unsigned, non-release build artifacts.
 
-See [Roadmap](ROADMAP.md).
+The settings tests cover first-run defaults, previous-valid-file backups, malformed JSON recovery, invalid backups, repeated corruption, and rejection of invalid JSON root types. Windows CI has passed for the implementation, but **does not validate Windows XP SP3, original arcade cabinets or every game revision**.
+
+## Controlled releases
+
+The [Release workflow](../.github/workflows/release.yml) builds in Windows and publishes a GitHub Release **only for version tags** that match `vX.Y.Z` (or a suffix such as `vX.Y.Z-rc1`). Manual workflow dispatch builds artifacts without publishing unless invoked on an eligible tag.
+
+Release ZIP contents:
+- `2EZConfig.exe` and `2EZ.dll`
+- `LICENSE` and `THIRD_PARTY_LICENSES`
+- `SHA256SUMS.txt` for the two binaries
+
+The ZIP has an accompanying `.zip.sha256` digest. Use the provided checksums to verify transfer integrity; they are **not a substitute for a code-signing signature**.
+
+## Additional regression work needed
+
+Add game-version test evidence, Windows XP SP3 physical/VM compatibility checks, HID hotplug tests, multi-instance config access tests, malformed custom patch tests and actual monitor refresh measurements. See the [roadmap](ROADMAP.md).
