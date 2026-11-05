@@ -1,56 +1,54 @@
-# 2EZConfig V2 ~ it rules once again ~
-A Complete Rewrite of the orginal [2EZConfig](https://github.com/ben-rnd/2EZConfig).
+# 2EZConfig_Re
 
-This tool is designed to enable USB controllers to work with all versions of EZ2DJ/AC, EZ2Dancer and Sabin Sound Star: Renascence Burst, as well as offering various patches that make the home experience more enjoyable. 
+Community fork of [2EZConfig V2](https://github.com/ben-rnd/2EZConfig-V2) by ben-rnd, based on the original 2EZConfig project. Original attribution and license notices are retained.
 
-## Features
-- Supports EZ2DJ/AC, EZ2Dancer and Sabin Sound Star: Renascence Burst, compatible with Windows XP or newer.
-- Full IO Emualtion. Feels just like the real thing.
-- JSON defined patch library, supporting basic RVA offset or pattern scan patches. Users can create their own patches in a user-patches.json file located in the game directory which will load the next time you open 2EZConfig. Please see the readme under the patches documentation folder for details about the patching system and how to define your own patches.
-- 60hz patches for (almost)all games. Now you never have to manually switch your refresh rate again. The game will request a 60hz refresh rate on boot, reverting once the game closes. 60hz is essential for accurate game timing.
-- Arcade hardware compatible. Did your IO die on you? 2EZconfig V2 is fully compatible with Windows XP SP3 and the NVIDIA TNT2. IO emulation can be fully disabled if youre only after the patches.
-- HID input and output, supporting lighting output from EZ2DJ. EZ2Dancer light support is pending port mappings being supplied or reverse engineered.
-- Supports Button Bound TT+ and TT- and Mouse X/Y axis turntables for maximum compatibilty with DIY cons.
-- On first boot, 2EZConfig will automatically detect which game youre running by scanning for exe's.
-- "Skip UI" option to boot directly into game once settings are set. Great for arcade like setups.
-- Multi DLL injection. If youve got your own EZ2 mods, 2EZconfig can inject them all in one place.
-- Support for 6th Trax "Remember 1st" mode. This mode is accesed by the game closing itself and opening an entirely different executable. 2EZConfig handles this without a hitch.
-- Optional DDRAW fixes built in to improve visuals on modern hardware.
+**Status:** This fork is being documented and reviewed. The features below are present in the inherited codebase; they are not newly implemented features of this fork. Windows XP SP3 compatibility is a build target and has not been independently verified in this fork.
 
-## Setup 
+## What it does
 
-1) Simply copy 2EZConfig.exe and 2EZ.dll into the root of your game directory. On first boot 2EZConfig will try and detect the game automatically, if this fails please select the game manually.
-2) Setup your bindings. Bindings are a global setting, all other instances of 2EZConfig will share the same input and output bindings.
-3) Press "Play EZ2" to boot the game. 
+2EZConfig configures input and output for **EZ2DJ/EZ2AC**, **EZ2Dancer**, and **Sabin Sound Star: Renascence Burst** on Windows. The source provides:
+- HID, keyboard, turntable/mouse-axis and lighting configuration (support varies by game).
+- Executable-hash-based game detection, with manual version selection.
+- Built-in and per-game custom JSON patches; optional DirectDraw/60 Hz fixes.
+- Optional WASAPI-based audio features on Windows Vista or newer.
+- Launch-time DLL loading and support for the 6th Trax / Remember 1st workflow.
 
-Enjoy!
+EZ2Dancer pad/hand-sensor lighting remains incomplete. Individual patches and compatibility options are not guaranteed to work with every game build.
 
-If you're playing on Windows Vista or later I highly reccomend using [DDrawCompat](https://github.com/narzoul/DDrawCompat/releases). This fixes various DDraw related crashes as well as improving the games visuals dramatically, by fixing various transparancy issues that occur on newer GPU's. 
+## Quick start
 
-#### Notes
-- Do not put any "." characters in any folders containing your EZ2 data, this breaks how to game reads its .ini configurations files and may prevent the game from working at all. When the game launches, it will scan the entire path and break on the first "." detected, if this is NOT the .ini file it will load defualt settings which often make the game unplayable.
-- When Upgrading to new version of 2EZconfig, ensure all copies are updated so that patches are applied correctly. Patches.json has been revised twice to better accomodate more complex patches and may break backwards compatibilitly.
-- 1st SE expects to run on the C drive regardless of the path fix applied in the compatibility patch. ON WinXP always run 1stSE from the C Drive. On Win11 this does not seem to be an issue.
+1. Obtain a trusted build or [build from source](documentation/BUILDING.md).
+2. Back up the game directory and existing settings.
+3. Place `2EZConfig.exe` and `2EZ.dll` alongside the game executable.
+4. Start the configurator **with the game folder as the working directory**. If detection fails, manually select the game/version and executable override.
+5. Configure controls in **Settings**, **Buttons**, **Analogs** (where available), **Lights**, and **Patches**; then select **Play EZ2**.
 
-## Get Involved
+Settings are stored in `game-settings.json` (working/game directory), `%APPDATA%\2ezconfig\global-settings.json` and `%APPDATA%\2ezconfig\patches.json`. Optional `user-patches.json` belongs in the game directory. The `-skip-config` argument launches without showing the UI.
 
-I will accept PR's for updates to the patches.json file if they seem appropriate. 
+## Documentation
 
-## Building
-All builds are done on windows with cmake and niXman mingw32 gcc 12.2.0 toolchain
+- [Installation and compatibility](documentation/INSTALLATION.md)
+- [Building and releases](documentation/BUILDING.md)
+- [Architecture and data flow](documentation/ARCHITECTURE.md)
+- [Troubleshooting](documentation/TROUBLESHOOTING.md)
+- [Patch format](documentation/patches/README.md)
+- [Technical audit and roadmap](documentation/ROADMAP.md)
+- [Contributing](CONTRIBUTING.md)
 
-Download toolchain and Dependancies
-```cmake --preset release```
+## Build (Windows)
 
-Build
-```cmake --build --preset release```
+Requires CMake 3.20+, Git, a working MinGW Makefiles environment, network access for FetchContent, and a suitable 7z extractor if needed. The current CMake file downloads an XP-targeted MinGW GCC 12.2 toolchain. **Known limitation:** create `toolchain/` before the first configure because current CMake does not create the archive's parent directory.
 
-## Target Platform
-- **Windows XP SP3** and later
+~~~powershell
+New-Item -ItemType Directory -Force toolchain | Out-Null
+cmake --preset release
+cmake --build --preset release
+~~~
 
-## Raising Bugs and Feature Requests
-Please use this repo to raise feature and bug requests. When reaising a bug or feature request please use the provided templates. Any issues raised with too little detail will be deleted and ignored.
+Expected outputs: `build/release/bin/2EZConfig.exe` and `build/release/bin/2EZ.dll`. These are documented build commands, not a claim of a verified build in this review. See [BUILDING.md](documentation/BUILDING.md).
 
-## Support
-I would prefer code and patch contributions but I often get asked anyway.
-So if you cant write code but want to help support me? [buy me a coffee](https://buymeacoffee.com/kasaski)
+## Safety, upstream and licensing
+
+Runtime patching changes game process memory. Back up configurations, enable patches individually, and only use game/software copies you are permitted to use. Do not expose legacy Windows XP systems directly to untrusted networks.
+
+Original upstream: [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Retain upstream notices and comply with [LICENSE](LICENSE) (GPL-3.0-or-later) and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) on redistribution. Contributions and issue reports for this fork belong in this repository.
