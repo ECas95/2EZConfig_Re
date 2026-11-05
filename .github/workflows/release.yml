@@ -1,12 +1,15 @@
 name: Build Release
 
 on:
-  push:                                                                                                                                                                                       
-    branches: [master]  
+  # Publishing is intentional: only a version tag can trigger a release.
+  push:
+    tags:
+      - 'v*'
+  # Manual dispatch builds the artifact; it only publishes if run on a v* tag.
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -20,17 +23,29 @@ jobs:
       - name: Build
         run: cmake --build --preset release
 
+      - name: Verify outputs
+        shell: pwsh
+        run: |
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll")) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "Missing release binary: $path" }
+          }
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: 2EZConfig-build
+          if-no-files-found: error
           path: |
             build/release/bin/2EZ.dll
             build/release/bin/2EZConfig.exe
 
   release:
+    # A manual dispatch on master builds but cannot accidentally publish.
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     environment: release
     steps:
       - uses: actions/checkout@v4
@@ -41,19 +56,30 @@ jobs:
           name: 2EZConfig-build
           path: bin
 
-      - name: Package release
+      - name: Package release with licenses and checksums
+        shell: bash
         run: |
-          VERSION=$(TZ=Australia/Sydney date +%Y.%m.%d)
+          set -euo pipefail
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must look like v1.2.3 or v1.2.3-rc1"
+            exit 1
+          fi
           mkdir -p release
-          cp bin/2EZ.dll release/
-          cp bin/2EZConfig.exe release/
-          cd release && zip ../2EZConfig-V2-${VERSION}.zip *
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          cp bin/2EZ.dll bin/2EZConfig.exe release/
+          cp LICENSE THIRD_PARTY_LICENSES release/
+          (
+            cd release
+            sha256sum 2EZ.dll 2EZConfig.exe > SHA256SUMS.txt
+            zip -q "../2EZConfig_Re-${GITHUB_REF_NAME}.zip" *
+          )
+          sha256sum "2EZConfig_Re-${GITHUB_REF_NAME}.zip" > "2EZConfig_Re-${GITHUB_REF_NAME}.zip.sha256"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.VERSION }}
-          name: 2EZConfig V2 ${{ env.VERSION }}
-          files: 2EZConfig-V2-${{ env.VERSION }}.zip
+          tag_name: ${{ github.ref_name }}
+          name: 2EZConfig_Re ${{ github.ref_name }}
+          files: |
+            2EZConfig_Re-${{ github.ref_name }}.zip
+            2EZConfig_Re-${{ github.ref_name }}.zip.sha256
           generate_release_notes: true
