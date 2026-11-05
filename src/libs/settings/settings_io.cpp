@@ -8,7 +8,16 @@
 
 namespace {
 bool fileExists(const std::string& path) {
-    return GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
+    const DWORD attributes = GetFileAttributesA(path.c_str());
+    if (attributes != INVALID_FILE_ATTRIBUTES) {
+        return true;
+    }
+    const DWORD error = GetLastError();
+    if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+        return false;
+    }
+    throw std::runtime_error("Cannot determine whether settings file exists: " + path +
+                             " (Win32 error " + std::to_string(error) + ")");
 }
 
 std::string win32Error(const std::string& action, DWORD code) {
