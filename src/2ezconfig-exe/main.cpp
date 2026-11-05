@@ -246,7 +246,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    g_app.settings.load(".", appDataDir);
+    try {
+        g_app.settings.load(".", appDataDir);
+    } catch (const std::exception& error) {
+        MessageBoxA(nullptr, error.what(), "2EZConfig: Settings Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
 
     g_app.input = new InputManager();
     g_app.bindings.load(g_app.settings, *g_app.input);
@@ -373,6 +378,15 @@ static void renderUI() {
     }
 
     ImGui::Separator();
+
+    if (!g_app.settings.lastWarning().empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.25f, 1.0f), "Settings recovery:");
+        ImGui::TextWrapped("%s", g_app.settings.lastWarning().c_str());
+    }
+    if (!g_app.settings.lastError().empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "Settings save failed:");
+        ImGui::TextWrapped("%s", g_app.settings.lastError().c_str());
+    }
 
     if (ImGui::BeginTabBar("##tabs")) {
 
