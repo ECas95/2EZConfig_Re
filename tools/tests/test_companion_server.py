@@ -41,7 +41,8 @@ class CompanionTests(unittest.TestCase):
             with urlopen(request, timeout=5) as resp:
                 return resp.status, json.load(resp)
         except HTTPError as error:
-            return error.code, json.load(error)
+            with error:
+                return error.code, json.load(error)
 
     def test_health_requires_token(self):
         self.assertEqual(self.call("/health", token=None)[0], 401)
