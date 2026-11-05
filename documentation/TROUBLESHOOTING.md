@@ -1,31 +1,32 @@
 # Troubleshooting and diagnostics
 
-**Before changing anything:** back up the game folder, `game-settings.json`, `user-patches.json` (if any) and `%APPDATA%\2ezconfig\`.
+**Before modifying your installation:** back up the game folder, `game-settings.json`, `user-patches.json` (if present) and `%APPDATA%\2ezconfig\`.
 
-| Symptom | Suggested checks |
+| Symptom | Recommended checks |
 | --- | --- |
-| Wrong game selected | Ensure game executable and working directory are correct. Auto-detection only recognizes known executable MD5 values; select the game/version manually. |
-| Game not starting | Verify game EXE name, `2EZ.dll` location, working directory, permissions and extra DLL conflicts. Disable optional patches to isolate. |
-| Configuration window does not appear | Remove `-skip-config` launch parameter. Back up `game-settings.json` and set `skip_ui` to `false` if needed. |
-| Input not registering | Rebind device, verify Windows HID enumeration and connected controller/port; check the correct game family. |
-| Turntable direction/sensitivity wrong | Check axis, inversion, virtual turntable (+/-) bindings, or mouse axis/sensitivity on EZ2DJ/AC. |
-| Lights not responding | Ensure an HID device supports output; verify mapping/output index. EZ2Dancer pad and hand-sensor lighting is incomplete. |
-| Video black or corrupted | Disable individual DirectDraw fixes; test external DDrawCompat separately on a supported modern Windows system. |
-| WASAPI audio not available | WASAPI EQ/Hypersonik are Vista+ features, not XP features. |
-| Patch fails or game crashes | Disable `user-patches.json`, restore backup, then enable one patch at a time; executable differences may invalidate addresses/patterns. |
-| JSON settings corrupt | Rename the affected file **after backing it up**; let defaults regenerate. Original upstream builds lack robust recovery. [PR #3](https://github.com/ECas95/2EZConfig_Re/pull/3) adds `.bak` recovery and `.corrupt` preservation; check whether your installed build includes it. |
-| Fresh CMake configure fails | For older upstream builds, create `toolchain/`. [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) automates this; otherwise check network access, 7z tools and MinGW generator support. See [BUILDING.md](BUILDING.md). |
+| Wrong game selected | Start the configurator with the game folder as working directory; MD5 auto-detection only recognizes known executables. Select the game/version manually if needed. |
+| Game does not start | Confirm exe override, companion `2EZ.dll`, working directory and extra DLL dependencies. Disable third-party DLLs and optional patches for isolation. |
+| Configuration UI is skipped | Remove `-skip-config` from launch options. If `skip_ui` is set in `game-settings.json`, back it up and change the value to `false`. |
+| Buttons not registering | Verify the HID/keyboard device, selected game family, correct bindings and USB port. |
+| Turntable not tracking | Check analog axis, inversion, virtual-turntable (+/-) bindings or mouse axis/sensitivity for EZ2DJ/AC. |
+| Lighting not responding | Confirm that your HID output device supports the selected output mapping. EZ2Dancer sensor/pad lighting is incomplete. |
+| Black/incorrect video | Try the base game without optional DDraw fixes; evaluate external DDrawCompat independently on supported Windows versions. |
+| No WASAPI audio feature on XP | WASAPI-based audio requires Windows Vista or later. |
+| Game crashes with patches | Disable `user-patches.json` and optional patches. Addresses/patterns can differ among executable revisions. |
+| Damaged JSON settings warning | The program archives the bad file as `.corrupt`/`.corrupt.N` and attempts `.bak` recovery. If no valid backup exists, it loads defaults. Confirm controls and game selection before playing. |
+| Settings cannot be saved | Check folder permissions, read-only files, antivirus locks and that the archive/backup location is writable. The UI reports save failures. |
+| Build errors | Check CMake 3.20+, MinGW Makefiles, 7-Zip fallback, Git network access, and toolchain hash validation. See [BUILDING.md](BUILDING.md). |
 
-## Collecting diagnostics
-Enable **Settings > Debug Settings > Enable Logging** when available. The DLL uses `2ez-logs.txt` in the game folder when logging is enabled.
+## Recovering settings
 
-A useful issue report states: Windows version/architecture; game ID/version and whether executable is modified; controller/HID model; exact actions; expected vs actual behavior; selected patches and compatibility options; sanitized logs; and whether the problem reproduces without custom patches.
+Current save logic writes a temporary file in the same directory and replaces the settings file after preparing a `.bak` copy of the previous valid content. **This is a last-good backup, not a multi-version history.** A malformed JSON file or a non-object root is moved aside rather than silently discarded. If preserving it fails, startup should report the error instead of proceeding.
 
-Remove personal names, local file paths, unique device paths and other sensitive data before uploading. Do not attach game binaries, proprietary game data, or secret keys.
+This recovery currently covers **game settings and global settings**. It does not validate arbitrary game files, back up the bundled patch definitions or prevent conflicts when multiple instances modify shared settings concurrently.
 
-## Non-destructive recovery
-1. Exit the game/configurator and save a copy of the failing JSON and logs.
-2. Disable extra DLLs and user-defined patches.
-3. If the JSON cannot be loaded, rename (do not delete) the suspect configuration and allow the application to create defaults.
-4. Test minimal launch; add bindings, video/audio options and patches back separately.
-5. Report the first reproducible failure with the minimal configuration. This aids diagnosis and preserves the original files.
+## Collecting useful diagnostics
+
+Enable **Settings > Debug Settings > Enable Logging** when available. The injected DLL can write `2ez-logs.txt` in the game folder.
+
+Before filing an issue, include: Windows version/architecture; game family/version and executable revision; controller/device model; selected patches; steps to reproduce; expected versus actual behavior; and sanitized logs. Strip personally identifying paths and device IDs, and do not upload copyrighted game executables/data or keys.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) and [the safety roadmap](ROADMAP.md).
