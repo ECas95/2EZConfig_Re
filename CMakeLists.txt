@@ -181,3 +181,9 @@ add_subdirectory(src/libs/bindings)
 add_subdirectory(src/2ezconfig-exe)
 add_subdirectory(src/2ez-dll)
 
+# Small, isolated tests for settings persistence and corruption recovery.
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
+
