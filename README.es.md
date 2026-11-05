@@ -18,6 +18,8 @@
 - **Lanzador:** carga de `2EZ.dll`, DLL adicionales opcionales, arranque sin interfaz y comportamiento especial de 6th Trax / Remember 1st.
 - **Protección de configuraciones:** guardado mediante archivo temporal, última copia válida `.bak`, preservación de JSON corruptos como `.corrupt` e intento de recuperación automática.
 - **Desarrollo:** compilación CMake/MinGW de 32 bits, verificación SHA-256 del compilador, dependencias fijadas y pruebas automatizadas en GitHub Actions.
+- **Diagnóstico HID:** pestaña Diagnostics con botones, ejes y dispositivos conectados en tiempo real.
+- **Extensiones opcionales:** eventos JSONL desde `2EZ.dll` con API C, perfiles de cabinets, validador de packs de canciones, API local de scores y salas multijugador experimentales en Python 3.10+.
 
 **Limitaciones:** la iluminación de sensores/pads de EZ2Dancer no está terminada. La compatibilidad con **Windows XP SP3** es un objetivo de compilación; no hay una verificación independiente de este fork en XP ni en cabinets originales. No todos los parches funcionan con todas las revisiones de cada juego.
 
@@ -32,6 +34,36 @@
 7. Prueba primero el juego con los parches opcionales desactivados y actívalos progresivamente.
 
 Para arrancar sin mostrar el configurador, utiliza `2EZConfig.exe -skip-config` después de confirmar que tu configuración funciona.
+
+## Diagnóstico de hardware y herramientas nuevas
+
+La nueva pestaña **Diagnostics** muestra dispositivos HID, botones presionados y ejes analógicos. Es **solo lectura**; los pulsos de luces siguen en la pestaña Lights.
+
+Las herramientas complementarias son opcionales y funcionan en una computadora moderna con **Python 3.10+**. No hacen falta para jugar ni deben ejecutarse en Windows XP:
+
+| Herramienta | Funcionalidad real | Limitación |
+| --- | --- | --- |
+| [Perfiles de cabinet](documentation/CABINET_PROFILES.md) | Exportar, comparar y restaurar JSON con respaldos | Aún sin selector visual en el configurador |
+| [Canciones personalizadas](documentation/CUSTOM_SONGS.md) | Validar manifests y archivos originales o licenciados | **Todavía no instala canciones en EZ2DJ/EZ2AC** |
+| [Scores locales](documentation/SCORES_API.md) | SQLite, carga manual de scores y rankings | Los scores son **no verificados**; falta capturarlos desde el juego |
+| [Salas multijugador](documentation/MULTIPLAYER.md) | Crear sala, unirse, listo, inicio y resultados para 2–4 participantes | No sincroniza partidas reales |
+| [SDK de eventos](documentation/EXTENSION_EVENTS.md) | Guardar eventos de hooks autorizados en JSONL sin networking en la DLL | Requiere adaptadores específicos para canciones y resultados |
+
+Ejecuta el servidor complementario en tu PC moderna:
+
+~~~powershell
+python tools/companion_server.py --host 127.0.0.1 --port 8765
+~~~
+
+Prueba el endpoint http://127.0.0.1:8765/health. El prototipo solo escucha conexiones locales por defecto; **no lo expongas a Internet como servidor público de rankings**.
+
+## Nuevos hooks: canciones custom, scores online y multijugador
+
+**Ya implementado:** API exportada `EZ2_PublishEvent`, evento `runtime.ready`, archivo local `2ez-events.jsonl` desactivado por defecto, herramienta de reenvío manual, servidor complementario y validación de archivos.
+
+**Pendiente:** un loader real de canciones para cada versión del juego, hooks confiables de selección de canciones/resultados, verificación anti-cheat y sincronización multijugador en tiempo real. Los ejemplos de desarrollo no equivalen a estas funciones dentro del arcade.
+
+Consulta la [guía de nuevos hooks](documentation/NEW_HOOKS.md), [canciones personalizadas](documentation/CUSTOM_SONGS.md), [scores](documentation/SCORES_API.md), [multijugador](documentation/MULTIPLAYER.md) y [SDK de eventos](documentation/EXTENSION_EVENTS.md). Trabaja únicamente con canciones y recursos propios o autorizados.
 
 ## Dónde se guardan las configuraciones
 
@@ -74,6 +106,6 @@ Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e inclu
 
 La [documentación técnica en inglés](README.md#project-documentation-and-contributing) incluye instalación, compilación, arquitectura, ejemplos JSON, diagnóstico, contribuciones y el [roadmap](documentation/ROADMAP.md).
 
-Entre las mejoras **propuestas pero todavía no implementadas** están un administrador de perfiles de cabinets, diagnóstico HID en vivo, mapeo gráfico de E/S, inspección de compatibilidad de parches y mayor seguridad en las escrituras de memoria.
+El **diagnóstico HID en vivo** ya está integrado y hay un administrador de perfiles mediante comandos. Siguen pendientes la selección visual de perfiles, mapeo gráfico de E/S, inspección de compatibilidad de parches, hooks reales para canciones/scores y protección avanzada de las escrituras de memoria.
 
 **Créditos:** fork de [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2), basado en [2EZConfig original](https://github.com/ben-rnd/2EZConfig). Consulta [LICENSE](LICENSE) y [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) antes de redistribuir.
