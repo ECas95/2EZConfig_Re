@@ -45,7 +45,7 @@ Las herramientas complementarias son opcionales y funcionan en una computadora m
 | --- | --- | --- |
 | [Perfiles de cabinet](documentation/CABINET_PROFILES.md) | Exportar, comparar y restaurar JSON con respaldos | Aún sin selector visual en el configurador |
 | [Canciones personalizadas](documentation/CUSTOM_SONGS.md) | Validar manifests y archivos originales o licenciados | **Todavía no instala canciones en EZ2DJ/EZ2AC** |
-| [Scores locales](documentation/SCORES_API.md) | SQLite, carga manual de scores y rankings | Los scores son **no verificados**; falta capturarlos desde el juego |
+| [Scores locales](documentation/SCORES_API.md) | SQLite, carga manual y **dashboard local** para scores y rankings | Los scores son **no verificados**; falta capturarlos desde el juego |
 | [Salas multijugador](documentation/MULTIPLAYER.md) | Crear sala, unirse, listo, inicio y resultados para 2–4 participantes | No sincroniza partidas reales |
 | [SDK de eventos](documentation/EXTENSION_EVENTS.md) | Guardar eventos de hooks autorizados en JSONL sin networking en la DLL | Requiere adaptadores específicos para canciones y resultados |
 
@@ -55,7 +55,7 @@ Ejecuta el servidor complementario en tu PC moderna:
 python tools/companion_server.py --host 127.0.0.1 --port 8765
 ~~~
 
-Prueba el endpoint http://127.0.0.1:8765/health. El prototipo solo escucha conexiones locales por defecto; **no lo expongas a Internet como servidor público de rankings**.
+Abre el **panel web local** en http://127.0.0.1:8765/dashboard para experimentar con scores, rankings, salas y eventos. El endpoint de salud es http://127.0.0.1:8765/health. El prototipo solo escucha conexiones locales por defecto; **no lo expongas a Internet como servidor público de rankings**.
 
 ## Nuevos hooks: canciones custom, scores online y multijugador
 
