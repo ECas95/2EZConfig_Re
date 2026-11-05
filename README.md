@@ -153,7 +153,7 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 
 ## Development status and roadmap
 
-**Implemented in the fork:** cleaner and verified toolchain provisioning, pinned build dependencies, PR CI, controlled release packaging and non-destructive JSON settings recovery.
+**Implemented in the fork:** cleaner and verified toolchain provisioning, pinned build dependencies, PR CI, controlled release packaging, non-destructive JSON settings recovery, live read-only HID diagnostics, opt-in JSONL hook events, and offline companion/utility prototypes.
 
 **Partially implemented or still proposed:** the **Diagnostics tab** provides live HID views, and **Cabinet Profile Manager** has an offline CLI MVP. Still proposed are stricter patch memory-write validation, process-injection lifecycle hardening, real per-game song/score adapters, verified multiplayer, GUI profile management, a **Visual IO Mapper**, and a **Patch Compatibility Inspector**. See the [prioritized roadmap](documentation/ROADMAP.md) for technical evidence and acceptance criteria.
 
@@ -174,5 +174,8 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [Troubleshooting](documentation/TROUBLESHOOTING.md) | Input/lighting/audio/video problems and safe recovery |
 | [Roadmap](documentation/ROADMAP.md) | Audited risks and proposed improvements |
 | [Contributing](CONTRIBUTING.md) | Reproduction details, tests and pull requests |
+| [Developer verification](documentation/DEVELOPER_GUIDE.md) | CI setup, test matrix and per-version adapter practices |
+| [Security policy](SECURITY.md) | Safe reporting and trust boundaries |
+| [Changelog](CHANGELOG.md) | Changes developed in this community fork |
 
 **Upstream:** [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2), based on [the original 2EZConfig](https://github.com/ben-rnd/2EZConfig). This fork does not claim authorship of upstream work. Licensing is governed by [GPL-3.0-or-later](LICENSE) and the bundled [third-party notices](THIRD_PARTY_LICENSES). Preserve these when redistributing modified builds.
