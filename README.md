@@ -18,6 +18,8 @@
 - [Features](#features)
 - [Supported game families](#supported-game-families)
 - [Quick start](#quick-start)
+- [Cabinet diagnostics and extension tools](#cabinet-diagnostics-and-extension-tools)
+- [New hooks: custom songs, score servers and multiplayer](#new-hooks-custom-songs-score-servers-and-multiplayer)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -35,6 +37,9 @@
 | **Launch tools** | Companion `2EZ.dll`, optional extra DLLs, a skip-UI option, and a special 6th Trax / Remember 1st launch flow |
 | **Configuration safety** | Atomic-style JSON replacement using temporary files, `.bak` last-good backup and `.corrupt` preservation/recovery |
 | **Build and quality** | CMake/MinGW 32-bit build, SHA-256-verified compiler archive, pinned dependencies and Windows CI + settings recovery tests |
+| **Device diagnostics** | Read-only live HID device/button/axis monitor in the new Diagnostics tab |
+| **Extensions SDK** | Disabled-by-default local JSONL events and an exported C ABI for trusted, version-specific hook adapters |
+| **Companion tools** | Offline cabinet profiles, custom-song pack validation, a localhost SQLite score API and prototype multiplayer lobbies (Python 3.10+; separate from the game) |
 
 **Limitations:** EZ2Dancer pad/hand-sensor lighting is not complete. Audio EQ/Hypersonik uses WASAPI and requires Vista or newer. Not every game build supports every patch. Automatic executable detection is a compatibility lookup, **not a cryptographic security guarantee**.
 
@@ -61,6 +66,41 @@ The game selection table in `src/common/include/game_defs.h` currently includes:
 7. Press **Play EZ2**. Start with optional patches disabled and enable them individually after confirming that the baseline game works.
 
 To bypass the configuration window after setup, launch `2EZConfig.exe -skip-config` (or configure `skip_ui` in the game JSON). Avoid enabling skip-UI until the game launches successfully.
+
+## Cabinet diagnostics and extension tools
+
+**No Python or networking is required to play with the original configurator.** These optional tools are separate from the legacy game process.
+
+| Tool | What you can use now | What it does NOT do |
+| --- | --- | --- |
+| **Diagnostics tab** | Monitor detected HID controls, pressed buttons and analog axes live | Does not decode undocumented original arcade IO boards |
+| [Cabinet profiles](documentation/CABINET_PROFILES.md) | Export, compare and explicitly restore game/global settings with backups | No GUI profile picker or automated HID path remapping yet |
+| [Song pack validator](documentation/CUSTOM_SONGS.md) | Validate original/licensed song manifests, paths, chart IDs and optional checksums | Does not install songs or charts into any proprietary game binary |
+| [Local score API](documentation/SCORES_API.md) | Post/query **unverified** scores stored in SQLite | Cannot currently extract actual arcade scores or certify gameplay |
+| [Lobby coordinator](documentation/MULTIPLAYER.md) | Local room, join, ready, start and result protocol for 2–4 players | Does not synchronize real games or provide online multiplayer in the arcade process |
+| [Event SDK](documentation/EXTENSION_EVENTS.md) | Opt-in JSONL events with a C ABI export in 2EZ.dll | Does not automatically identify song selection or result screens |
+
+On a **modern PC with Python 3.10+**, start the companion:
+
+~~~powershell
+python tools/companion_server.py --host 127.0.0.1 --port 8765
+~~~
+
+Check the health endpoint at http://127.0.0.1:8765/health. The server binds only to localhost by default. It is a development prototype, **not a public ranked score server**.
+
+Preview a saved cabinet profile without applying it:
+
+~~~powershell
+python tools/cabinet_profiles.py diff --game-dir "C:\Arcade\EZ2" --profile "D:\Backups\my_cabinet.json"
+~~~
+
+## New hooks: custom songs, score servers and multiplayer
+
+**What is real today:** existing game-family IO/display/audio hooks; an opt-in exported function named `EZ2_PublishEvent`; the `runtime.ready` event; validation and companion infrastructure.
+
+**What still requires game-specific development:** custom song catalogs and loaders, `song.selected` and verified `score.observed` hooks, score deduplication/anti-cheat, and live synchronized multiplayer. The companion accepts **synthetic or manual data** for development; it is not connected to a proprietary game's result memory.
+
+Read the [new hooks research guide](documentation/NEW_HOOKS.md) for per-title reverse-engineering requirements and safety guards, then the guides on [custom songs](documentation/CUSTOM_SONGS.md), [score APIs](documentation/SCORES_API.md), [multiplayer](documentation/MULTIPLAYER.md) and the [event hook C ABI](documentation/EXTENSION_EVENTS.md). All examples use your own or rights-cleared assets.
 
 ## Configuration files and recovery
 
@@ -115,7 +155,7 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 
 **Implemented in the fork:** cleaner and verified toolchain provisioning, pinned build dependencies, PR CI, controlled release packaging and non-destructive JSON settings recovery.
 
-**Proposed, not implemented:** stricter patch memory-write validation, process-injection lifecycle hardening, additional device/game compatibility tests, a **Device Diagnostics Lab**, **Cabinet Profile Manager**, **Visual IO Mapper**, and a **Patch Compatibility Inspector**. See the [prioritized roadmap](documentation/ROADMAP.md) for technical evidence and acceptance criteria.
+**Partially implemented or still proposed:** the **Diagnostics tab** provides live HID views, and **Cabinet Profile Manager** has an offline CLI MVP. Still proposed are stricter patch memory-write validation, process-injection lifecycle hardening, real per-game song/score adapters, verified multiplayer, GUI profile management, a **Visual IO Mapper**, and a **Patch Compatibility Inspector**. See the [prioritized roadmap](documentation/ROADMAP.md) for technical evidence and acceptance criteria.
 
 ## Project documentation and contributing
 
@@ -124,6 +164,12 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [Installation](documentation/INSTALLATION.md) | First run, working directory, limitations and compatibility |
 | [Build and releases](documentation/BUILDING.md) | Compiler, dependencies, presets, tests and release workflow |
 | [Architecture](documentation/ARCHITECTURE.md) | Frontend, DLL, IO layers, patch engine and data flow |
+| [Hook architecture](documentation/NEW_HOOKS.md) | Custom song, score and multiplayer adapter research by game build |
+| [Extension event SDK](documentation/EXTENSION_EVENTS.md) | Local events and exported C ABI with safety rules |
+| [Custom songs](documentation/CUSTOM_SONGS.md) | Licensed pack format, validation and in-game adapter roadmap |
+| [Scores API](documentation/SCORES_API.md) | Local score API, trust limitations and example requests |
+| [Multiplayer](documentation/MULTIPLAYER.md) | Prototype lobby endpoints and network-coordination roadmap |
+| [Cabinet profiles](documentation/CABINET_PROFILES.md) | Offline snapshots, diff and safe restore |
 | [Patch authoring](documentation/patches/README.md) | Game IDs, custom JSON format and patch safety |
 | [Troubleshooting](documentation/TROUBLESHOOTING.md) | Input/lighting/audio/video problems and safe recovery |
 | [Roadmap](documentation/ROADMAP.md) | Audited risks and proposed improvements |
