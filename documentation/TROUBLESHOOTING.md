@@ -13,8 +13,8 @@
 | Video black or corrupted | Disable individual DirectDraw fixes; test external DDrawCompat separately on a supported modern Windows system. |
 | WASAPI audio not available | WASAPI EQ/Hypersonik are Vista+ features, not XP features. |
 | Patch fails or game crashes | Disable `user-patches.json`, restore backup, then enable one patch at a time; executable differences may invalidate addresses/patterns. |
-| JSON settings corrupt | Rename the affected file **after backing it up**; let defaults regenerate. Current parser lacks a robust interactive recovery flow. |
-| Fresh CMake configure fails | Create `toolchain/`, verify network access, 7z tools and MinGW generator support. See [BUILDING.md](BUILDING.md). |
+| JSON settings corrupt | Rename the affected file **after backing it up**; let defaults regenerate. Original upstream builds lack robust recovery. [PR #3](https://github.com/ECas95/2EZConfig_Re/pull/3) adds `.bak` recovery and `.corrupt` preservation; check whether your installed build includes it. |
+| Fresh CMake configure fails | For older upstream builds, create `toolchain/`. [PR #2](https://github.com/ECas95/2EZConfig_Re/pull/2) automates this; otherwise check network access, 7z tools and MinGW generator support. See [BUILDING.md](BUILDING.md). |
 
 ## Collecting diagnostics
 Enable **Settings > Debug Settings > Enable Logging** when available. The DLL uses `2ez-logs.txt` in the game folder when logging is enabled.
