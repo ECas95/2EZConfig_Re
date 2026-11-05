@@ -703,6 +703,9 @@ static void renderSettingsTab() {
 
     ImGui::SeparatorText("Debug Settings");
     gameCheckbox("Enable Logging", "logging_enabled", false);
+    gameCheckbox("Enable local extension events (opt-in)", "extension_events_enabled", false);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Append low-frequency hook events to 2ez-events.jsonl.\nNo network connection is made by the DLL.");
     {
         bool loggingOn = g_app.settings.gameSettings().value("logging_enabled", false);
         if (loggingOn){
