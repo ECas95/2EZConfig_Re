@@ -181,6 +181,18 @@ Los binarios esperados están en `build/release/bin/`. El compilador GCC 12.2 de
 
 Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e incluyen los archivos de licencia y checksums.
 
+## Diagnóstico de crashes Intel sin wrappers
+
+Un registro real de Final:EX con **Native DirectX activado** identificó `igc32.dll` (controlador Intel 32.0.101.7088), excepción `0xC0000005`, desplazamiento `0x00E44C06`. Los tres fallos registrados repiten la misma firma; la causa raíz aún necesita aislarse con pruebas del driver/GPU. El diagnóstico **no justifica instalar dgVoodoo u otros wrappers**.
+
+Para analizar eventos exportados de Windows de forma local y sin mostrar rutas privadas:
+
+~~~powershell
+.\tools\windows_crash_report.ps1 -EvtxPath 'C:\Logs\ez21.evtx','C:\Logs\ez22.evtx'
+~~~
+
+Consulta la [guía de análisis de Intel Graphics](documentation/INTEL_DRIVER_CRASH.md). La herramienta no modifica controladores ni el juego y evita contar dos veces EVTX idénticos.
+
 ## Compatibilidad y resolución de problemas
 
 - En Windows moderno, [DDrawCompat](https://github.com/narzoul/DDrawCompat) es una herramienta externa opcional; pruébala por separado.
