@@ -19,6 +19,11 @@ jobs:
           python3 -m json.tool src/resources/patches.json > /dev/null
       - name: Test companion services and offline tooling
         run: python3 -m unittest discover -s tools/tests -p 'test_*.py' -v
+      - name: Exercise synthetic Final EX GDS and SVG tools
+        run: |
+          python3 tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json > /dev/null
+          python3 tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output "$RUNNER_TEMP/fnex_lane_map.svg"
+          python3 -c 'import sys,xml.etree.ElementTree as ET; ET.parse(sys.argv[1])' "$RUNNER_TEMP/fnex_lane_map.svg"
 
   windows-build:
     runs-on: windows-latest
