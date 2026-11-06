@@ -65,6 +65,30 @@ Abre el **panel web local** en http://127.0.0.1:8765/dashboard para experimentar
 
 Consulta la [guía de nuevos hooks](documentation/NEW_HOOKS.md), [canciones personalizadas](documentation/CUSTOM_SONGS.md), [scores](documentation/SCORES_API.md), [multijugador](documentation/MULTIPLAYER.md) y [SDK de eventos](documentation/EXTENSION_EVENTS.md). Trabaja únicamente con canciones y recursos propios o autorizados.
 
+## Investigación de EZ2AC Final:EX
+
+Analicé un paquete privado de ingeniería inversa del juego que describe el catálogo de canciones, los archivos de configuración de modos, el orden de carriles, el sistema de juicio y los rankings. Este fork utiliza **conclusiones técnicas y herramientas propias**; no publica el código reconstruido del juego, archivos comerciales, dumps o claves privadas del material de referencia.
+
+Se agregaron tres herramientas Python **de solo lectura**, útiles para documentación y pruebas:
+
+| Herramienta | Qué hace | Limitación |
+| --- | --- | --- |
+| [Inspector GDS](documentation/fnex/FORMATS.md) | Lee `.gds`, verifica Slot1/Slot2, claves y orden de SongTrack por carril | No modifica archivos ni convierte charts |
+| [Inspector de rankings](documentation/fnex/FORMATS.md) | Interpreta posibles formatos de top 5 o top 99 de archivos locales, ocultando los nombres por defecto | No certifica scores ni los sube a Internet |
+| [Comprobador de compatibilidad](documentation/fnex/COMPATIBILITY.md) | Calcula SHA-256 del ejecutable local y compara manifests de adaptadores | No instala hooks; el hash de una imagen desempaquetada no equivale al del archivo original |
+
+Prueba el inspector con un archivo **sintético propio del repositorio**:
+
+~~~powershell
+python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
+~~~
+
+El juego existente se identifica como `ez2ac_fn_ex` en 2EZConfig_Re. Para un futuro hook real aún se necesita verificar **la versión exacta del ejecutable**, las instrucciones esperadas, la compatibilidad de memoria y el funcionamiento en hardware arcade.
+
+Documentación ampliada: [análisis de Final:EX](documentation/fnex/README.md), [formatos y archivos](documentation/fnex/FORMATS.md), [diseño de hooks](documentation/fnex/HOOK_DESIGN.md), [compatibilidad](documentation/fnex/COMPATIBILITY.md) y [plan de implementación](documentation/fnex/INTEGRATION_PLAN.md).
+
+**Todavía no están implementados** un loader real de canciones para Final:EX, un hook de resultados verificados ni el multijugador sincronizado dentro del juego. La nueva infraestructura ayuda a desarrollarlos sin depender de offsets de memoria supuestos.
+
 ## Dónde se guardan las configuraciones
 
 | Archivo | Ubicación | Uso |
