@@ -27,6 +27,17 @@ python tools/adapter_compatibility.py --exe "D:\OwnGame\EZ2AC.exe" --manifest ex
 
 The registry contains a **deliberately fake all-zero hash** and should never match a real executable. It installs no hooks. Replace the fake hash only after verifying the *exact on-disk build* you are allowed to run, then test the adapter's in-memory target bytes separately. A hash of an unpacked/reconstructed research image **cannot replace** the original on-disk hash.
 
+## Synthetic song-selection and two-player results
+
+The self-authored [synthetic observation trace](synthetic_observations.jsonl) shows two preview states, a deduplicated song confirmation, a stage start, two finalized player results and a stage end. Try:
+
+~~~powershell
+python tools/fnex_trace_replay.py --input examples/fnex/synthetic_observations.jsonl --output synthetic_events.jsonl --json
+python tools/event_bridge.py --file synthetic_events.jsonl
+~~~
+
+Both commands operate offline by default. They **do not detect real game events**. The output records include synthetic=true and verified=false. See [PASSIVE_OBSERVATORY.md](../../documentation/fnex/PASSIVE_OBSERVATORY.md).
+
 ## Synthetic ranking file
 
 For testing the ranking inspector, generate a small file yourself:
