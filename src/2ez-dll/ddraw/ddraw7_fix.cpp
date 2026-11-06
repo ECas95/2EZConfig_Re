@@ -3,6 +3,7 @@
  */
 
 #include "ddraw7_fix.h"
+#include "display_refresh.h"
 #include "ddraw_vertex_utils.h"
 #include "ddraw_vtable.h"
 #include "hooks.h"
@@ -37,6 +38,7 @@ typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateDevice)(IDirect3D7* self, REFCLSID
 
 static bool s_force32bpp = false;
 static bool s_force60hz = false;
+static int s_refreshHz = 0;
 static bool s_pointFilter = false;
 static bool s_texelAlignment = false;
 
@@ -136,7 +138,14 @@ static HRESULT STDMETHODCALLTYPE Hooked_DDraw7QueryInterface(IUnknown* self, REF
 
 static HRESULT STDMETHODCALLTYPE Hooked_SetDisplayMode(IDirectDraw7* self, DWORD width, DWORD height, DWORD bpp, DWORD refreshRate, DWORD flags) {
     DWORD newBpp     = s_force32bpp ? 32 : bpp;
-    DWORD newRefresh = s_force60hz  ? 60 : refreshRate;
+    DWORD newRefresh = s_refreshHz ? static_cast<DWORD>(s_refreshHz)
+                                   : (s_force60hz ? 60 : refreshRate);
+    // 120 Hz is experimental: never request an absent exact mode. The old
+    // force_60hz path remains available for existing settings profiles.
+    if (newRefresh == 120 &&
+        !ez2DisplayModeSupportsRefresh(width, height, newBpp, newRefresh)) {
+        newRefresh = refreshRate;
+    }
     return g_origSetDisplayMode(self, width, height, newBpp, newRefresh, flags);
 }
 
@@ -148,7 +157,7 @@ static HRESULT WINAPI Hooked_DirectDrawCreateEx(GUID* lpGuid, LPVOID* lplpDD, RE
 
     void** vtable = *(void***)*lplpDD;
 
-    if ((s_force32bpp || s_force60hz) && !g_origSetDisplayMode) {
+    if ((s_force32bpp || s_force60hz || s_refreshHz) && !g_origSetDisplayMode) {
         if (hook_create(vtable[VT::IDirectDraw7::SetDisplayMode], (void*)Hooked_SetDisplayMode, (void**)&g_origSetDisplayMode))
             Logger::info("[DDraw7Fix] Hooked IDirectDraw7::SetDisplayMode");
     }
@@ -192,14 +201,16 @@ static DWORD WINAPI HookWatchThread(LPVOID) {
 void DDraw7Fix::install(SettingsManager* settings) {
     s_force32bpp     = settings->gameSettings().value("force_32bit_display", false);
     s_force60hz      = settings->gameSettings().value("force_60hz", false);
+    s_refreshHz      = settings->gameSettings().value("display_refresh_hz", 0);
+    if (s_refreshHz != 60 && s_refreshHz != 120) s_refreshHz = 0;
     s_pointFilter    = settings->gameSettings().value("point_filtering", false);
     s_texelAlignment = settings->gameSettings().value("texel_alignment", false);
 
-    if (!s_force32bpp && !s_force60hz && !s_pointFilter && !s_texelAlignment) return;
+    if (!s_force32bpp && !s_force60hz && !s_refreshHz && !s_pointFilter && !s_texelAlignment) return;
 
     if (TryHookInline()) {
         Logger::info("[DDraw7Fix] Installed (32bpp=" + std::to_string(s_force32bpp) +
-                     " 60hz=" + std::to_string(s_force60hz) +
+                     " refreshHz=" + std::to_string(s_refreshHz ? s_refreshHz : (s_force60hz ? 60 : 0)) +
                      " pointFilter=" + std::to_string(s_pointFilter) +
                      " texelAlignment=" + std::to_string(s_texelAlignment) + ")");
         return;
