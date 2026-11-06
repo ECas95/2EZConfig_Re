@@ -10,10 +10,10 @@
 | Option | Current function | Limitation |
 | --- | --- | --- |
 | Original | Leaves game window unmodified | Default and recommended for cabinets |
-| Windowed | Adds normal resizable title bar, requested client size | Exclusive DirectDraw may override it |
-| Borderless | Centered undecorated window at selected dimensions | No automatic output scaling |
-| Borderless Fullscreen | Fills selected monitor with an undecorated window | 4:3 content can stretch without compatible renderer |
-| Draggable | Centered borderless; Ctrl+Alt+left mouse drag moves window | Can conflict with game hotkeys; opt in only |
+| Windowed | **Disabled pending real-game certification** | Win32 restyling alone cannot change DirectDraw cooperative mode |
+| Borderless | **Disabled pending real-game certification** | A safe source presentation path is required |
+| Borderless Fullscreen | **Disabled pending real-game certification** | Same limitation; 4:3 scaling remains unimplemented |
+| Draggable | **Disabled pending real-game certification** | Cannot safely drag an exclusive fullscreen DirectDraw surface |
 | Display refresh 60 / 120 Hz | DirectDraw4/7 SetDisplayMode refresh request | Not a game FPS unlock |
 | Pixel-sharp POINT | Existing Direct3D texture sampling patch | Not a pixel shader, CRT filter or AI upscaler |
 
