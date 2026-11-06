@@ -121,7 +121,8 @@ static int Inject(DWORD *pid, const char* dllPath){
     return 1;
 }
 
-int Injector::LaunchAndInject(const char* exeName, const std::vector<std::string>& extraDlls) {
+int Injector::LaunchAndInject(const char* exeName, const std::vector<std::string>& extraDlls, DWORD* launchedPid) {
+    if (launchedPid) *launchedPid = 0;
     char fullPath[MAX_PATH];
     if (!GetFullPathNameA(exeName, MAX_PATH, fullPath, NULL)) {
         printf("[-] GetFullPathNameA failed\n");
@@ -162,7 +163,14 @@ int Injector::LaunchAndInject(const char* exeName, const std::vector<std::string
         }
     }
 
-    ResumeThread(pi.hThread);
+    DWORD resumeResult = ResumeThread(pi.hThread);
+    if (resumeResult == (DWORD)-1) {
+        TerminateProcess(pi.hProcess, 1);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        return 0;
+    }
+    if (launchedPid) *launchedPid = pi.dwProcessId;
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     return 1;
