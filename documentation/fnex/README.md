@@ -29,6 +29,7 @@ The reference project's own completion criteria describe a reconstructed/annotat
 | File | Status | Purpose |
 | --- | --- | --- |
 | tools/gds_inspector.py | Implemented, read-only | Inspect GDS Slot order, Key pairs and SongTrack mappings |
+| tools/gds_visualizer.py | Implemented, offline | Render parsed mode mappings as self-contained SVG lane diagrams |
 | tools/ranking_inspector.py | Implemented, read-only | Inspect candidate 5- and 99-entry local ranking layouts without writing files |
 | tools/adapter_compatibility.py | Implemented, offline | SHA-256 exact on-disk executable preflight against a separate adapter manifest |
 | tools/tests/test_fnex_research_tools.py | Implemented | Synthetic fixtures, negative-path and privacy tests |
