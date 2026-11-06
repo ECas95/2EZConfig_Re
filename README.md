@@ -183,7 +183,7 @@ The scripts read local metadata and file paths only; they neither install the mo
 The Display tab now includes **Native DirectX**, an optional per-game diagnostic that skips 2EZ's DirectDraw4/7 graphics hooks while preserving the other IO/patch functionality. It does not install dgVoodoo, change game rendering APIs or guarantee windowed presentation. See [Native DirectX recovery](documentation/NATIVE_DIRECTX_RECOVERY.md).
 
 
-The **Display** tab now offers an opt-in Windows helper for Windowed, Borderless, Borderless Fullscreen and Draggable (Ctrl+Alt+left-mouse) window styles. Native remains the default; some exclusive DirectDraw games cannot be made windowed by changing OS styles alone.
+The Display tab lists Windowed, Borderless, Borderless Fullscreen and Draggable as **disabled until renderer compatibility is certified**. Native is the only currently selectable window mode on unverified builds. The previous helper is deliberately not launched, rather than assuming that window restyling can convert an exclusive renderer.
 
 The DirectDraw4/7 refresh selector now offers **Game default, 60 Hz and experimental 120 Hz**. A 120 Hz monitor request **does not unlock 120 real game FPS**; if the exact display mode is not enumerated, the DLL preserves the game's original refresh request. The original 60 Hz setting is backward compatible.
 
