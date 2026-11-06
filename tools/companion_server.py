@@ -178,12 +178,17 @@ class CompanionState:
         player = identifier(query.get("player_id", [""])[0], "player_id", 48)
         with self.connect() as con:
             summary = con.execute(
-                "SELECT COUNT(*) AS plays, COUNT(DISTINCT song_id || char(0) || chart_id) "
-                "AS charts_played, MAX(score) AS highest_raw_score,"
+                "SELECT COUNT(*) AS plays, MAX(score) AS highest_raw_score,"
                 " MAX(created_at) AS last_played_at "
                 "FROM scores WHERE game_id=? AND player_id=?", (game, player)
             ).fetchone()
-        return {"game_id": game, "player_id": player, **dict(summary),
+            distinct_chart_count = con.execute(
+                "SELECT COUNT(*) FROM (SELECT 1 FROM scores "
+                "WHERE game_id=? AND player_id=? GROUP BY song_id,chart_id)",
+                (game, player)
+            ).fetchone()[0]
+        return {"game_id": game, "player_id": player,
+                **dict(summary), "charts_played": distinct_chart_count,
                 "verified": False, "warning": "Scores are unverified, not game normalized"}
 
     def create_room(self, payload):
