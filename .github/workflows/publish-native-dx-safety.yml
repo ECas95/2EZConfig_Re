@@ -1,0 +1,122 @@
+name: Publish Native DX Safety Preview
+
+on:
+  push:
+    branches:
+      - 'release-preview/native-dx-safety-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 2ez-native-dx-safety-preview
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 582d210ee40976843aba6f78fd78956c04b6f6df
+
+      - name: Configure x86 release
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Run compiled regression tests
+        run: ctest --test-dir build/release -C Release --output-on-failure
+
+      - name: Run Python regression tests
+        run: python -m unittest discover -s tools/tests -p 'test_*.py' -v
+
+      - name: Assemble no-wrapper native DirectX test ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          foreach ($name in @('2EZConfig.exe', '2EZ.dll')) {
+            $src = "build/release/bin/$name"
+            if (-not (Test-Path $src -PathType Leaf)) { throw "Missing $name" }
+            Copy-Item $src "release/$name"
+          }
+          Copy-Item LICENSE release/
+          Copy-Item THIRD_PARTY_LICENSES release/
+          Copy-Item README.es.md release/
+          Copy-Item documentation/NATIVE_DIRECTX_RECOVERY.md release/
+          Copy-Item documentation/PRESENTATION_MODES.md release/
+          @(
+            '# 2EZConfig_Re - Native DirectX Safety Preview 2',
+            '',
+            'WARNING: replaces the unsafe Windowed experiment in video-preview.1.',
+            '1. Backup 2EZConfig.exe, 2EZ.dll and game-settings.json.',
+            '2. Copy only the two binaries in this ZIP to the authorized game directory.',
+            '3. Display > Window mode = Original. Reset any saved Windowed value.',
+            '4. Test A: Native DirectX = OFF. Save the game log.',
+            '5. Test B: Native DirectX = ON. Save the game log.',
+            '6. Never use Windowed, Borderless or Draggable until certified.',
+            '7. Native DX does not convert Direct3D7 to OpenGL/D3D11.',
+            '8. Do not use an unverified 120 Hz mode on a 15 kHz CRT.',
+            '9. 2EZWindowMode.exe is intentionally NOT distributed.',
+            '',
+            'See NATIVE_DIRECTX_RECOVERY.md for details.'
+          ) | Set-Content -Encoding utf8 release/LEEME-NATIVE-DIRECTX.md
+          $hashes = foreach ($name in @('2EZConfig.exe', '2EZ.dll')) {
+            $digest = (Get-FileHash "release/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$digest  $name"
+          }
+          $hashes | Set-Content -Encoding ascii release/SHA256SUMS.txt
+          $zip = '2EZConfig_Re-v1.0.0-video-preview.2.zip'
+          Compress-Archive -Path 'release/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $digest = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$digest  $zip" | Set-Content -Encoding ascii "$zip.sha256"
+
+      - name: Upload validated assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-dx-safety-release-assets
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-video-preview.2.zip
+            2EZConfig_Re-v1.0.0-video-preview.2.zip.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-dx-safety-release-assets
+          path: dist
+
+      - name: Publish experimental recovery release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-video-preview.2
+          target_commitish: 582d210ee40976843aba6f78fd78956c04b6f6df
+          name: 2EZConfig_Re - Native DirectX Safety Preview 2
+          prerelease: true
+          draft: false
+          make_latest: false
+          body: |
+            ## Native DirectX recovery (experimental)
+
+            Supersedes video-preview.1. The previous Windowed experiment may crash Final:EX: Win32 window restyling does not convert a fullscreen-exclusive DirectDraw7 renderer into a working windowed surface.
+
+            This build disables Windowed, Borderless, Borderless Fullscreen and Draggable on uncertified games, including previously saved settings.
+
+            New option: Display > Native DirectX (no 2EZ DirectDraw/Direct3D hooks). When ON, it bypasses 2EZ's DDraw4/7 graphics detours but retains other IO/game services. Default OFF, preserving the existing patches.
+
+            The ZIP contains 2EZConfig.exe and 2EZ.dll, instructions, licenses and SHA-256 checksums. 2EZWindowMode.exe is intentionally NOT distributed. No dgVoodoo or third-party graphics wrapper is included.
+
+            To test: back up existing files; use Window mode Original; compare Native DirectX OFF vs ON. If it crashes, capture Windows Event Viewer faulting module and exception code. Do not assume 120 Hz means 120 rendered FPS.
+
+            Native DirectX 7 does NOT enable true Windowed, convert to OpenGL/DX11 or certify the game against Windows 10/11. See NATIVE_DIRECTX_RECOVERY.md. Fix in PR #11.
+          files: |
+            dist/2EZConfig_Re-v1.0.0-video-preview.2.zip
+            dist/2EZConfig_Re-v1.0.0-video-preview.2.zip.sha256
