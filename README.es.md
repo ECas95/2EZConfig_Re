@@ -104,6 +104,22 @@ El segundo comando usa **datos sintéticos**: no detecta canciones reales, no ac
 
 Guía detallada: [Final:EX Passive Observatory](documentation/fnex/PASSIVE_OBSERVATORY.md). La captura auténtica de resultados y canciones sigue pendiente de un adaptador probado para una versión exacta de Final:EX.
 
+## Compatibilidad con EZ2CustomMod (proyecto externo)
+
+Los nuevos archivos entregados contienen un **mod desarrollado por separado** para Final:EX: lector de canciones BMS, AutoChart, categorías, previews y rankings locales. El proyecto externo describe pruebas con más de 23 mil canciones, pero esa validación **no se ha reproducido en este fork**. No copiamos su código decompilado ni distribuimos su DLL o recursos de juego.
+
+En 2EZConfig_Re ahora hay advertencias de compatibilidad junto a **Settings → Extra DLLs**, además de herramientas Python para revisar la instalación, comprobar la estructura de BMSData y resumir logs de rendimiento en XP sin exponer títulos de canciones o nombres de jugadores.
+
+**Atención:** el ejecutable predeterminado en este fork para Final:EX es `EZ2AC.exe`, pero la guía externa de EZ2CustomMod utiliza `EZ2B.exe`. Verifica cuál está presente en tu instalación y configura **Exe Name Override** manualmente si corresponde.
+
+~~~powershell
+python tools/fnex_custommod_preflight.py --game-dir "D:\Arcade\FNEX" --json
+python tools/fnex_bms_library_check.py "D:\Arcade\FNEX\BMSData" --check-assets --json
+python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log" --json
+~~~
+
+Guía técnica: [integración con EZ2CustomMod](documentation/fnex/CUSTOMMOD_INTEROP.md) y [auditoría de sus fuentes privadas](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md). Los hooks reales de resultados y los scores online verificados **siguen pendientes**.
+
 ## Dónde se guardan las configuraciones
 
 | Archivo | Ubicación | Uso |
