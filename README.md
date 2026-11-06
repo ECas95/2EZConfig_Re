@@ -176,6 +176,12 @@ python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log"
 
 The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
 
+## Vendor-neutral graphics diagnostics
+
+2EZConfig_Re should not depend on Intel, NVIDIA or AMD graphics. The Diagnostics tab now links to Windows per-application graphics preferences and provides a separate read-only GPU inventory script. Neither forces GPU selection nor asserts that a legacy DDraw7 game used a particular adapter.
+
+Run tools/gpu_compatibility_report.ps1 on a modern Windows host. See [vendor-neutral GPU guide](documentation/VENDOR_NEUTRAL_GPU.md) for hybrid GPU testing and no-wrapper limitations.
+
 ## Intel driver crash evidence (native DirectX baseline)
 
 An actual Final:EX Native DirectX test still produced three Windows Application Error records for **igc32.dll** (Intel driver 32.0.101.7088), `0xC0000005`, at the same fault offset. This is evidence of a failure in the Intel graphics-driver module, **not proof of sole driver responsibility**. 2EZ graphics detours were disabled for the correlated session.
