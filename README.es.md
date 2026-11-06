@@ -13,7 +13,7 @@
 
 **2EZConfig_Re** debe funcionar como una plataforma de compatibilidad y utilidades para EZ2DJ/EZ2AC, no como otro creador de canciones o un motor de charts. Las prioridades pasan a ser Windows modernos, estabilidad de lanzamiento, controles/audio/pantalla y un **sistema de scores con opción de rankings globales**.
 
-**Disponible ahora:** [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md) de solo lectura, mejoras de seguridad contra duplicados en scores locales, rankings de **récord personal** y estadísticas locales desde el dashboard. Todas las puntuaciones siguen siendo **no verificadas**.
+**Disponible ahora:** un botón **Check launcher files** en Diagnostics y [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md) de solo lectura, mejoras de seguridad contra duplicados en scores locales, rankings de **récord personal** y estadísticas locales desde el dashboard. Todas las puntuaciones siguen siendo **no verificadas**.
 
 **Pendiente:** hooks de resultados finales comprobados en una versión exacta del juego, perfiles de compatibilidad medidos en Windows 10/11, autenticación y servidor global real. La ingeniería inversa se usa como referencia, sin copiar códigos propietarios al fork.
 
