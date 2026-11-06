@@ -111,7 +111,7 @@ Useful findings now have independent, safe implementations:
 
 | New tool | Use today | Limits |
 | --- | --- | --- |
-| [GDS lane inspector](documentation/fnex/FORMATS.md) | Read a mode `.gds` to inspect player slots, key pairs and ordered SongTrack mappings | Read-only structural subset; no chart loader |
+| [GDS lane inspector and SVG mapping](documentation/fnex/FORMATS.md) | Read a mode `.gds`, inspect ordered SongTrack mappings and render a standalone diagram | Read-only structural subset; no chart loader |
 | [Ranking inspector](documentation/fnex/FORMATS.md) | Read possible local top-five or top-99 score files without modifying them; player names hidden by default | Formats are research-derived; scores are unverified |
 | [Exact-build preflight](documentation/fnex/COMPATIBILITY.md) | SHA-256 user-owned executable and compare with a registered, explicitly on-disk fingerprint | Does not install a hook or prove runtime compatibility |
 
@@ -119,6 +119,7 @@ Try the self-authored sample:
 
 ~~~powershell
 python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
+python tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output synthetic_lanes.svg
 python tools/adapter_compatibility.py --exe "C:\OwnGame\EZ2AC.exe" --manifest examples/fnex/adapter-registry.example.json --json
 ~~~
 
