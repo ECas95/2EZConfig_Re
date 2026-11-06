@@ -56,6 +56,19 @@ The validator enforces unique IDs, required metadata, at least one chart per son
 
 **Non-goals:** validating audio codecs, BGA decoding, BPM/timing accuracy, lane semantics, proprietary chart formats, malware, or legal ownership. A passing pack validates manifest structure only.
 
+## Final:EX-specific catalog and lane research
+
+New [Final:EX research guides](fnex/README.md) identify two extra constraints for any custom-song loader: the game's mode/stage metadata controls song visibility and difficulty options, and **the ordered Track entries in mode GDS files define playable lane-to-chart-track mapping**. Neither fact is encoded in the generic pack manifest.
+
+On your own, authorized installation, run:
+
+~~~powershell
+python tools/gds_inspector.py "D:\OwnGame\system\your_mode\mode.gds" --json
+python tools/gds_visualizer.py "D:\OwnGame\system\your_mode\mode.gds" --output original_lane_map.svg
+~~~
+
+These are read-only analysis utilities; they do **not** parse encrypted chart assets or inject songs. A real adapter must validate the exact game binary and own content rights before inserting a single custom track. See [the candidate hook architecture](fnex/HOOK_DESIGN.md).
+
 ## Research steps for real game support
 
 1. Select a single exact executable revision and record its SHA-256.
