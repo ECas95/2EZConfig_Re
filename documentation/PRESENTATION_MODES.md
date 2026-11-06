@@ -17,7 +17,7 @@
 | Display refresh 60 / 120 Hz | DirectDraw4/7 SetDisplayMode refresh request | Not a game FPS unlock |
 | Pixel-sharp POINT | Existing Direct3D texture sampling patch | Not a pixel shader, CRT filter or AI upscaler |
 
-All settings are per game. The helper is an optional 32-bit Win32 application, built in the existing XP-targeted toolchain. It starts only after successful game launch, watches the real process PID, finds the largest suitable visible window and applies one style/geometry change. It does not inject any new DLL, read the game's memory, capture frames or make network calls. It exits after the game process exits; it stops if no game window appears within 30 seconds.
+All settings are per game. The original optional 32-bit Win32 helper remains in the source tree for research, but the launcher **no longer starts it on any unverified game**. A restored game build must pass a real native-window compatibility test before that code path can be re-enabled. The new native_graphics_mode setting is an independent diagnostic that skips 2EZ's DirectDraw4/7 detours without changing the game render API.
 
 The 6th Trax / Remember 1st special launcher does not currently use the helper, to avoid inadvertently styling the intermediate process.
 
