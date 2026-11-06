@@ -54,6 +54,18 @@ python tools/adapter_compatibility.py --exe "D:\OwnGame\EZ2AC.exe" --manifest ex
 
 The adapter registry's checksum is intentionally fake. These tools cannot install hooks or verify an actual retail executable, and no original game data is included. Unit tests in tools/tests/test_fnex_research_tools.py exercise only synthetic fixtures. See [Final:EX compatibility and evidence levels](fnex/COMPATIBILITY.md) and the [source crosswalk](fnex/SOURCE_MAP.md).
 
+## Final:EX offline event observatory smoke tests
+
+~~~powershell
+python tools/fnex_mode_inventory.py examples/fnex --json
+python tools/fnex_trace_replay.py --input examples/fnex/synthetic_observations.jsonl --output synthetic_events.jsonl --json
+python tools/event_bridge.py --file synthetic_events.jsonl
+~~~
+
+The trace file is an original fixture; it does not originate from a cabinet. The replay rejects results without a started stage, ignores preview selections, prevents duplicate finalized results and flags every record synthetic/unverified. Do not merge this into ranked online score ingestion without a verified game adapter and independent player authentication.
+
+Tests: tools/tests/test_fnex_observatory.py. Detailed guide: [PASSIVE_OBSERVATORY.md](fnex/PASSIVE_OBSERVATORY.md).
+
 ## Minimum regression matrix
 
 | Area | Positive case | Failure case | Evidence required |

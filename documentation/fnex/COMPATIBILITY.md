@@ -48,6 +48,10 @@ A matching registry entry **is not proof that its hook code is safe**. It only e
 
 Do not claim L4/L5 compatibility because the Python tests pass.
 
+## Offline state-machine readiness
+
+The [synthetic observatory](PASSIVE_OBSERVATORY.md) checks event contract sequencing without touching the executable: preview suppression, confirmed selection, start, finalized P1/P2 scores, end, duplicate handling and aborted-stage behavior. This is **Level 1 synthetic evidence only**. It does not upgrade any game build to Level 3/4/5 support.
+
 ## Research regression matrix
 
 | Domain | Successful case | Important failure case |

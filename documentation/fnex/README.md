@@ -47,6 +47,10 @@ These tools do **not** activate new game hooks. They only prepare the informatio
 
 General project resources: [custom songs](../CUSTOM_SONGS.md), [event SDK](../EXTENSION_EVENTS.md), [local scores](../SCORES_API.md), [multiplayer](../MULTIPLAYER.md), [technical roadmap](../ROADMAP.md).
 
+## New passive observatory milestone
+
+The next phase provides an [offline observatory](PASSIVE_OBSERVATORY.md): mode-directory inventory, guarded rehearsal of synthetic song-confirmed/final-result events, and private ranking snapshot comparison. This **prepares event contracts without injecting a memory hook**. The [fixture trace](../../examples/fnex/synthetic_observations.jsonl) exercises two-player scoring, but does not represent a real cabinet session.
+
 ## Distribution and trust
 
 The supplied research package explicitly describes itself as private and warns that reconstructed game source can raise copyright and licensing questions despite its own GPL file. **Do not copy it wholesale into this public fork.** The work committed here consists of independently authored validation tools, synthetic data, and high-level compatibility findings. Redistribution of extracted/reconstructed code or specific private artifacts requires a separate rights/provenance review.

@@ -21,6 +21,7 @@
 - [Cabinet diagnostics and extension tools](#cabinet-diagnostics-and-extension-tools)
 - [New hooks: custom songs, score servers and multiplayer](#new-hooks-custom-songs-score-servers-and-multiplayer)
 - [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
+- [Final:EX passive observatory](#finalex-passive-observatory)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -128,6 +129,24 @@ The adapter registry above intentionally contains a **fake all-zero SHA-256**, s
 Research guides: [Final:EX integration overview](documentation/fnex/README.md), [data formats](documentation/fnex/FORMATS.md), [hook design](documentation/fnex/HOOK_DESIGN.md), [compatibility](documentation/fnex/COMPATIBILITY.md) and [implementation plan](documentation/fnex/INTEGRATION_PLAN.md).
 
 **What is not available yet:** real Final:EX custom-song injection, an authenticated score-observation hook, latency changes based on hardcoded offsets or synchronized online multiplayer. These remain per-game-version development tasks.
+
+## Final:EX passive observatory
+
+To support the next hook milestone without guessing undocumented memory addresses, the fork now offers an **offline, read-only observatory** for modes, scores and game-session state transitions:
+
+| Utility | Practical use | Boundary |
+| --- | --- | --- |
+| Mode inventory | Inspect every user-owned `.gds` in a mode directory and report lanes, key pairs and collisions | Does not read song files or game memory |
+| Offline event rehearsal | Turn a synthetic song-preview / confirmation / stage / final-result trace into standard extension events | **Synthetic only**; not a real song or score hook |
+| Ranking snapshot comparison | Compare two candidate 5-/99-entry ranking files without disclosing names | Numerical changes are **not authenticated plays** |
+
+~~~powershell
+python tools/fnex_mode_inventory.py examples/fnex --json
+python tools/fnex_trace_replay.py --input examples/fnex/synthetic_observations.jsonl --output synthetic_events.jsonl --json
+python tools/event_bridge.py --file synthetic_events.jsonl
+~~~
+
+These commands do **not** connect to a game or transmit data; the event bridge defaults to preview/dry-run. The output is always marked `synthetic=true` and `verified=false`. See the [complete observatory and data contracts guide](documentation/fnex/PASSIVE_OBSERVATORY.md). Runtime memory hooks for a specific, validated Final:EX executable are **still pending**.
 
 ## Configuration files and recovery
 

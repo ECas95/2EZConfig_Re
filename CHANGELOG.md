@@ -2,6 +2,14 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — Final:EX Passive Observatory
+
+- Added a read-only per-directory GDS mode inventory with warnings about conflicting keys or chart-track mappings.
+- Added a deterministic synthetic observation-to-event state machine: song preview never generates a selected song; results are emitted only after a started stage and once per player.
+- Added a local, privacy-first numeric ranking snapshot diff, with no player names, file writes or automatic network submission.
+- Added a self-authored two-player JSONL fixture, CI smoke coverage and detailed operator instructions.
+- Game-specific Final:EX hooks are still **not** implemented. All fixture-generated scores remain synthetic/unverified.
+
 ## Unreleased — Final:EX research interoperability
 
 ### Added

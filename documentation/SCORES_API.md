@@ -95,6 +95,10 @@ SQLite scores: ID, created_at timestamp, game_id, song_id, chart_id, player_id, 
 
 The prototype has a shared optional bearer token, not per-player authentication. Results are **not evidence of a legitimate game play** and should never be used for ranked competitions without integrity controls.
 
+## Final:EX passive result-contract rehearsal
+
+A new [offline trace-replay tool](fnex/PASSIVE_OBSERVATORY.md) accepts explicitly synthetic observations and emits score.observed only after a stage begins and a result is marked finalized. Generated events are synthetic=true and verified=false, and enter the existing event viewer only via manual bridge operation. **They do not create SQLite scores or authenticate any gameplay.** A local ranking-snapshot diff also reports numerical changes without identifying players or inventing play events.
+
 ## Final:EX local ranking research
 
 The new [ranking inspector](fnex/FORMATS.md) can read candidate Final:EX **top-five** (60-byte) and **top-99** (1,188-byte) ranking files from an operator-owned installation. It defaults to **redacting legacy player names**, makes no network requests and never changes the files.
