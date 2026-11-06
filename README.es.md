@@ -181,6 +181,12 @@ Los binarios esperados están en `build/release/bin/`. El compilador GCC 12.2 de
 
 Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e incluyen los archivos de licencia y checksums.
 
+## Prueba independiente de DirectDraw 7
+
+Como Final:EX sigue fallando con Native DirectX, ahora disponemos de 2EZDx7Probe.exe. Este comprobador ejecuta el DirectDraw7 del propio Windows en un proceso independiente, sin iniciar Final:EX, sin usar dgVoodoo ni modificar el monitor.
+
+Uso: 2EZDx7Probe.exe y 2EZDx7Probe.exe --deep (opcional, comprueba dispositivos Direct3D7). Los reportes JSON permiten diferenciar una falla de API del sistema de otra que aparece solamente con el juego. Pasar la prueba **no certifica** Final:EX. [Guía de DX7](documentation/NATIVE_DX7_PROBE.md).
+
 ## Diagnóstico GPU universal (Intel, NVIDIA, AMD)
 
 2EZConfig_Re no debe exigir una GPU específica. Añadimos acceso a las preferencias gráficas de Windows desde Diagnostics y un inventario local de adaptadores/controladores, independiente de la marca y de solo lectura.
