@@ -1,6 +1,7 @@
 // Isolated DirectDraw7 / Direct3D7 capability probe.
 // XP-compatible, no game process, injection, hooks, display-mode changes,
-// wrappers, network or writes. Results are diagnostic, not certification.
+// wrappers, network or persistent writes. Optional device tests allocate and
+// release a 128x128 render surface in the probe process only.
 #define DIRECTDRAW_VERSION 0x0700
 #define DIRECT3D_VERSION 0x0700
 #include <windows.h>
@@ -185,8 +186,8 @@ int main(int argc, char** argv) {
                                  IID_IDirectDraw7, nullptr);
     if (SUCCEEDED(report.createResult) && ddraw) {
         report.ddCreated = true;
-        // DDSCL_NORMAL with a NULL window is explicitly supported by MSDN.
-        // No SetDisplayMode, exclusive fullscreen, Win32 window restyling or hook.
+        // DDSCL_NORMAL permits NULL HWND in basic/deep mode; device tests
+        // use their own top-level probe HWND. No exclusive mode or hooking.
         report.cooperativeResult = ddraw->SetCooperativeLevel(probeWindow, DDSCL_NORMAL);
         report.cooperativeNormal = SUCCEEDED(report.cooperativeResult);
         if (report.cooperativeNormal) {
