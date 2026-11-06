@@ -823,12 +823,19 @@ static void renderDisplayTab() {
         ImGui::TextWrapped("This affects OS window style only. It cannot defeat "
             "an exclusive DirectDraw cooperative level or change internal game FPS.");
         ImGui::TextDisabled("Requires 2EZWindowMode.exe next to 2EZConfig.exe.");
-        if (std::filesystem::exists("2EZWindowMode.exe")) {
+        static const std::filesystem::path helperPath = [] {
+            char modulePath[MAX_PATH] = {};
+            DWORD size = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+            if (!size || size >= MAX_PATH) return std::filesystem::path();
+            return std::filesystem::path(modulePath).parent_path() / "2EZWindowMode.exe";
+        }();
+        std::error_code helperError;
+        if (!helperPath.empty() && std::filesystem::is_regular_file(helperPath, helperError)) {
             ImGui::TextColored(ImVec4(0.55f, 0.85f, 0.65f, 1.0f),
                                "[OK] Presentation helper found.");
         } else {
             ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
-                               "[MISSING] Presentation helper not installed.");
+                               "[MISSING] Presentation helper not installed beside the launcher.");
         }
     }
 
