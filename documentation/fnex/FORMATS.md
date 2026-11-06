@@ -46,6 +46,16 @@ python tools/gds_inspector.py "D:\OwnGame\system\your_mode\mode.gds" --json
 
 The inspector reads at most 1 MiB, checks Slot declarations and counts, rejects malformed/range-invalid mappings and emits machine-readable player/lane/key/chart-track data. It does not load any game binaries, change mappings or decode proprietary charts.
 
+### Generate a visual lane map (SVG)
+
+You can also generate a **standalone, offline diagram** of the exact input/key-to-chart-track ordering reported by the inspector:
+
+~~~powershell
+python tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output example-lanes.svg
+~~~
+
+Open example-lanes.svg in a browser. The utility is independent of the arcade game, embeds no copyrighted assets or remote fonts, and refuses to overwrite an existing output unless --force is supplied.
+
 Only the **Slot subset** of the full GDS grammar is parsed. Unknown game-defined sections are ignored by design, and unusual syntax may be rejected rather than guessed. Report a sanitized minimal example if a valid game-owned file uses a different syntax.
 
 ### Practical next use
