@@ -1,0 +1,189 @@
+name: Publish GPU-neutral Video Preview 3
+
+# One-time, isolated pre-release. Only the pinned, verified master commit is built.
+on:
+  push:
+    branches:
+      - 'release-preview/gpu-diagnostics-v3-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 2ez-video-preview-v3
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout exact merged source commit
+        uses: actions/checkout@v4
+        with:
+          ref: fd1d1e186fac5a3f9b1c98a08a608883d62ed861
+
+      - name: Configure 32-bit Windows Release
+        run: cmake --preset release
+
+      - name: Build release binaries
+        run: cmake --build --preset release --parallel 2
+
+      - name: Native CTest regression suite
+        run: ctest --test-dir build/release -C Release --output-on-failure
+
+      - name: Python regression suite
+        run: python -m unittest discover -s tools/tests -p 'test_*.py' -v
+
+      - name: Validate GPU-neutral inventory with synthetic Intel/NVIDIA/AMD-independent data
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $report = & ./tools/gpu_compatibility_report.ps1 -FixturePath ./tools/tests/fixtures/synthetic_gpu_adapters.json | ConvertFrom-Json
+          if ($report.adapter_count -ne 2 -or -not $report.multiple_adapters_detected) { throw 'GPU inventory fixture failed' }
+          if ($report.modifies_gpu_preference -or $report.validates_game_compatibility) { throw 'GPU tool may not claim changes or game validation' }
+          $names = @($report.adapters | ForEach-Object { $_.name })
+          if ($names -notcontains 'Vendor A Integrated Sample' -or $names -notcontains 'Vendor B Discrete Sample') { throw 'GPU vendor-neutral report mismatch' }
+          if (($report | ConvertTo-Json -Depth 8) -match 'PRIVATE-DO-NOT-OUTPUT|PRIVATE-DEVICE-ID') { throw 'GPU private identifiers leaked' }
+
+      - name: Validate Windows crash report privacy
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $report = & ./tools/windows_crash_report.ps1 -XmlPath ./tools/tests/fixtures/synthetic_application_error.xml | ConvertFrom-Json
+          if ($report.unique_crashes -ne 1) { throw 'Crash report fixture failed' }
+          if ($report.crashes[0].module -ne 'examplegpu32.dll' -or $report.crashes[0].exception_code -ne 'c0000005') { throw 'Crash signature mismatch' }
+          if (($report | ConvertTo-Json -Depth 8) -match 'TEST-PRIVATE-DO-NOT-OUTPUT') { throw 'User path leaked' }
+
+      - name: Assemble safe portable ZIP, test guide and hashes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path release/tools,release/documentation | Out-Null
+          foreach ($name in @('2EZConfig.exe','2EZ.dll')) {
+            $source = "build/release/bin/$name"
+            if (-not (Test-Path $source -PathType Leaf)) { throw "Missing release output: $name" }
+            Copy-Item -LiteralPath $source -Destination "release/$name"
+          }
+          foreach ($name in @('LICENSE','THIRD_PARTY_LICENSES','README.es.md')) {
+            Copy-Item -LiteralPath $name -Destination release/
+          }
+          foreach ($name in @('gpu_compatibility_report.ps1','windows_crash_report.ps1','compatibility_doctor.py')) {
+            Copy-Item -LiteralPath "tools/$name" -Destination "release/tools/$name"
+          }
+          foreach ($name in @('VENDOR_NEUTRAL_GPU.md','INTEL_DRIVER_CRASH.md','NATIVE_DIRECTX_RECOVERY.md','PRESENTATION_MODES.md')) {
+            Copy-Item -LiteralPath "documentation/$name" -Destination "release/documentation/$name"
+          }
+          @'
+          # 2EZConfig_Re - Prueba Video Preview 3: diagnostico GPU universal
+
+          VERSION: v1.0.0-video-preview.3 (experimental)
+          ESTA VERSION NO CERTIFICA COMPATIBILIDAD GRAFICA CON FINAL:EX.
+
+          1. Respalda 2EZConfig.exe, 2EZ.dll y game-settings.json.
+          2. Sustituye solamente 2EZConfig.exe y 2EZ.dll en tu instalacion autorizada.
+          3. No agregues dgVoodoo, wrappers, ddraw.dll, dxgi.dll ni archivos graficos nuevos.
+             No borres archivos DLL existentes sin conocer su procedencia.
+          4. Selecciona Display > Original y refresco Game default.
+             Windowed, Borderless y Draggable siguen DESHABILITADOS.
+          5. Activa Display > Native DirectX (sin hooks graficos 2EZ) para una
+             prueba comparativa. Esto conserva los otros servicios de 2EZ.
+          6. En Windows > Sistema > Pantalla > Graficos agrega EL JUEGO EZ2AC.exe
+             (no solamente 2EZConfig.exe). Primero prueba 'Dejar que Windows decida'.
+          7. Cierra el juego. Cambia a 'Alto rendimiento' y vuelve a probar.
+          8. Cierra el juego. Cambia a 'Ahorro de energia' y vuelve a probar.
+             La preferencia de Windows no demuestra cual GPU proceso Direct3D7.
+          9. Repite SOLO si cada intento mantiene identical configuracion 2EZ,
+             monitor y refresco. No cambies a 120 Hz durante el diagnostico.
+          10. En PowerShell del PC, desde la carpeta descomprimida del ZIP:
+               .\tools\gpu_compatibility_report.ps1
+               .\tools\windows_crash_report.ps1 -AppName EZ2AC.exe
+          11. Guarda los resultados JSON y los logs de 2EZ de cada ejecucion.
+              Evita compartir rutas, nombres personales o archivos del juego.
+          12. Si sigue fallando, comparte la firma tecnica: modulo, excepcion,
+              desplazamiento, version driver y el estado Native DirectX.
+
+          La falla anterior se registro en igc32.dll del controlador Intel, pero
+          NO prueba que Intel sea el unico culpable ni que NVIDIA se este usando.
+          Los shaders y FPS 120 reales siguen pendientes.
+          El ejecutable experimental 2EZWindowMode.exe NO se distribuye.
+          No incluye juego, canciones, videos ni recursos propietarios.
+          Revisa documentation/VENDOR_NEUTRAL_GPU.md.
+          '@ | Set-Content -Path release/LEEME-PRUEBAS-GPU.md -Encoding utf8
+
+          # Exclude the known unsafe Win32 style helper and all external wrappers.
+          if (Test-Path 'release/2EZWindowMode.exe') { throw 'Experimental window helper must be withheld' }
+          foreach ($dll in @('ddraw.dll','d3d9.dll','dxgi.dll')) {
+            if (Test-Path "release/$dll") { throw "Unexpected graphics wrapper candidate: $dll" }
+          }
+          $releaseRoot = (Resolve-Path release).Path
+          $items = @(Get-ChildItem -Path release -Recurse -File | Sort-Object FullName)
+          $hashes = foreach ($item in $items) {
+            $relative = $item.FullName.Substring($releaseRoot.Length + 1).Replace('\','/')
+            $digest = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$digest  $relative"
+          }
+          $hashes | Set-Content -Path release/SHA256SUMS.txt -Encoding ascii
+
+          $zip = '2EZConfig_Re-v1.0.0-video-preview.3.zip'
+          Compress-Archive -Path 'release/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $zipDigest = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$zipDigest  $zip" | Set-Content -Path "$zip.sha256" -Encoding ascii
+
+      - name: Upload tested prerelease artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-preview-v3-tested-assets
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-video-preview.3.zip
+            2EZConfig_Re-v1.0.0-video-preview.3.zip.sha256
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested package
+        uses: actions/download-artifact@v4
+        with:
+          name: video-preview-v3-tested-assets
+          path: dist
+
+      - name: Publish experimental release from merged source
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-video-preview.3
+          target_commitish: fd1d1e186fac5a3f9b1c98a08a608883d62ed861
+          name: 2EZConfig_Re - GPU-Neutral Video Preview 3
+          prerelease: true
+          draft: false
+          make_latest: false
+          body: |
+            ## GPU-neutral native DirectX diagnostics — Preview 3
+
+            Experimental update based on merged PR #13. No dgVoodoo, graphics wrappers, driver modifications or game assets are bundled.
+
+            ### What's included
+            - 2EZConfig.exe and 2EZ.dll (Windows x86) with vendor-neutral **Diagnostics > Open Windows Graphics Settings** shortcut.
+            - PowerShell scripts for read-only adapter/driver inventory and privacy-redacted Windows Application Error (Event ID 1000) reports.
+            - Compatibility Doctor, Spanish A/B/C GPU test guide, source documentation, licenses and SHA-256 hashes.
+
+            ### Test procedure
+            1. Back up your old binaries and game-settings.json.
+            2. Select **Display > Original**; keep **Native DirectX ON** and refresh at **Game default** while diagnosing startup crashes.
+            3. In Windows Graphics Settings, add the **actual game executable** (e.g., EZ2AC.exe). Compare **Let Windows decide**, **High performance**, and **Power saving**, restarting the game between changes.
+            4. Run the included tools/gpu_compatibility_report.ps1 and tools/windows_crash_report.ps1 locally and compare crash-module signatures.
+            5. Share sanitized logs and exceptions. Windows GPU preference is **not proof** of which adapter rendered DirectDraw7/Direct3D7.
+
+            ### Safety and limitations
+            - Unsafe Windowed, Borderless, Draggable styles remain disabled for uncertified game builds. 2EZWindowMode.exe is deliberately excluded.
+            - True 120 rendered FPS, shaders, FSR, D3D7-to-OpenGL/DX11 conversion and guaranteed universal GPU compatibility are NOT implemented.
+            - The prior Final:EX crash was observed in Intel igc32.dll 32.0.101.7088, but the fault module alone does not establish sole driver responsibility.
+            - Build/CTest/Python/PowerShell checks passed in GitHub Actions; this is **not certified on physical hardware**.
+
+            This release is pinned to merged master SHA fd1d1e186fac5a3f9b1c98a08a608883d62ed861. See LEEME-PRUEBAS-GPU.md in the ZIP.
+          files: |
+            dist/2EZConfig_Re-v1.0.0-video-preview.3.zip
+            dist/2EZConfig_Re-v1.0.0-video-preview.3.zip.sha256
