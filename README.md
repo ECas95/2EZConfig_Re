@@ -176,6 +176,12 @@ python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log"
 
 The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
 
+## Intel driver crash evidence (native DirectX baseline)
+
+An actual Final:EX Native DirectX test still produced three Windows Application Error records for **igc32.dll** (Intel driver 32.0.101.7088), `0xC0000005`, at the same fault offset. This is evidence of a failure in the Intel graphics-driver module, **not proof of sole driver responsibility**. 2EZ graphics detours were disabled for the correlated session.
+
+New read-only [Windows crash report](tools/windows_crash_report.ps1) scans local EVTX exports or Windows Application Error events, omits personal system paths and deduplicates identical exports. See [Intel driver crash triage](documentation/INTEL_DRIVER_CRASH.md) for precise evidence and safe GPU/driver A/B experiments without dgVoodoo.
+
 ## Display modernization: window modes and 60/120 Hz
 
 **Safety correction:** a real Final:EX report indicates a crash after selecting Windowed. The previous Win32 window restyler did not change DirectDraw cooperative mode. **All unverified Windowed/Borderless/Draggable modes are now disabled and saved non-native values ignored at launch**, rather than risking crashes.
