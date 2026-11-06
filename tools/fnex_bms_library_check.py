@@ -45,16 +45,22 @@ def valid_asset_reference(value: str) -> tuple[str, ...] | None:
     return parts
 
 
-def matching_child(folder: Path, name: str) -> Path | None:
+def matching_child(folder: Path, name: str,
+                   lookup_cache: dict | None = None) -> Path | None:
     if not folder.is_dir() or folder.is_symlink():
         return None
+    if lookup_cache is not None:
+        if folder not in lookup_cache:
+            lookup_cache[folder] = {child.name.casefold(): child for child in folder.iterdir()}
+        return lookup_cache[folder].get(name.casefold())
     for child in folder.iterdir():
         if child.name.casefold() == name.casefold():
             return child
     return None
 
 
-def declared_asset_found(song: Path, value: str) -> bool | None:
+def declared_asset_found(song: Path, value: str,
+                         lookup_cache: dict | None = None) -> bool | None:
     """Return None for unsafe paths, else whether an asset exists in this song."""
     parts = valid_asset_reference(value)
     if parts is None:
@@ -62,13 +68,13 @@ def declared_asset_found(song: Path, value: str) -> bool | None:
     roots = [song]
     # Typical BMS libraries keep keysounds under sound/ when only basename is named.
     if len(parts) == 1:
-        sub = matching_child(song, "sound")
+        sub = matching_child(song, "sound", lookup_cache)
         if sub is not None and sub.is_dir() and not sub.is_symlink():
             roots.append(sub)
     for root in roots:
         node = root
         for part in parts:
-            node = matching_child(node, part)
+            node = matching_child(node, part, lookup_cache)
             if node is None or node.is_symlink():
                 break
         else:
@@ -132,6 +138,9 @@ def inspect_bms_library(directory: str | Path, *, check_assets=False) -> dict:
                 if not chart_paths:
                     issue("no_charts", song, "Expected chart file directly in song folder")
                     continue
+                # Share one filename index across charts in the same song;
+                # otherwise thousands of WAV declarations cause repeated directory scans.
+                song_lookup_cache = {}
                 for chart in sorted(chart_paths, key=lambda p: p.name.casefold()):
                     counts["charts"] += 1
                     per_mode[canonical]["charts"] += 1
@@ -150,7 +159,7 @@ def inspect_bms_library(directory: str | Path, *, check_assets=False) -> dict:
                     for match in DECLARATION.finditer(text):
                         declared = match.group(2)
                         counts["declared_assets"] += 1
-                        found = declared_asset_found(song, declared)
+                        found = declared_asset_found(song, declared, song_lookup_cache)
                         if found is None:
                             issue("unsafe_asset_path", chart,
                                   "A WAV/BMP declaration uses an unsafe path")
