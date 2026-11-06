@@ -1,5 +1,6 @@
 """Synthetic regression tests for offline FNEX mode and event observatory."""
 import json
+import struct
 import sys
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fnex_mode_inventory import inspect_mode_directory
+from fnex_ranking_diff import compare_rankings, compare_ranking_files
 from fnex_trace_replay import load_observations, replay, replay_file, main as trace_main
 
 GDS = """[General]
@@ -151,6 +153,38 @@ class TraceReplayTests(unittest.TestCase):
             path.write_text("{ invalid json \n")
             with self.assertRaisesRegex(ValueError, "invalid JSON"):
                 load_observations(path)
+
+
+class RankingDiffTests(unittest.TestCase):
+    def test_reports_only_positive_unverified_score_differences(self):
+        old = bytes(5 * 8) + struct.pack("<5i", 900, 800, 700, 600, 0)
+        new = bytes(5 * 8) + struct.pack("<5i", 950, 900, 800, 700, 600)
+        report = compare_rankings(old, new, "song_top5")
+        self.assertFalse(report["verified"])
+        self.assertTrue(report["read_only"])
+        self.assertEqual(report["added_positive_scores"], [{"score": 950, "count": 1}])
+        self.assertEqual(report["removed_positive_scores"], [])
+        self.assertNotIn("name_legacy", json.dumps(report))
+        self.assertTrue(any("not authenticated" in msg for msg in report["warnings"]))
+
+    def test_name_only_change_never_fabricates_a_play(self):
+        names1 = b"A".ljust(8, b"\0") + bytes(4 * 8)
+        names2 = b"B".ljust(8, b"\0") + bytes(4 * 8)
+        scores = struct.pack("<5i", 500, 0, 0, 0, 0)
+        report = compare_rankings(names1 + scores, names2 + scores, "song_top5")
+        self.assertTrue(report["file_changed"])
+        self.assertEqual(report["added_positive_scores"], [])
+        self.assertEqual(report["removed_positive_scores"], [])
+        self.assertTrue(any("names/ordering" in x for x in report["warnings"]))
+
+    def test_rejects_wrong_file_length(self):
+        with tempfile.TemporaryDirectory() as root:
+            first = Path(root) / "before.bin"
+            second = Path(root) / "after.bin"
+            first.write_bytes(bytes(60))
+            second.write_bytes(bytes(61))
+            with self.assertRaisesRegex(ValueError, "Expected exactly"):
+                compare_ranking_files(first, second, "song_top5")
 
 
 if __name__ == "__main__":
