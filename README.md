@@ -148,6 +148,22 @@ python tools/event_bridge.py --file synthetic_events.jsonl
 
 These commands do **not** connect to a game or transmit data; the event bridge defaults to preview/dry-run. The output is always marked `synthetic=true` and `verified=false`. See the [complete observatory and data contracts guide](documentation/fnex/PASSIVE_OBSERVATORY.md). Runtime memory hooks for a specific, validated Final:EX executable are **still pending**.
 
+## EZ2CustomMod interoperability (external Final:EX song loader)
+
+The latest private source/docs supplied for the project describe a **separate, previously developed EZ2CustomMod DLL** with BMS scanning, custom FNEX song integration and AutoChart. **The loader exists in that external project; it is not bundled or implemented by 2EZConfig_Re**, and no private reconstructed game code was imported.
+
+This fork now adds a contextual **Settings → Extra DLLs** readiness warning, an installation preflight, optional BMSData chart/asset diagnostics and privacy-redacted XP performance-log summaries.
+
+**Important:** our Final:EX default executable is `EZ2AC.exe`, while the supplied external mod guide uses `EZ2B.exe`. Verify the actual installed game revision and use **Exe Name Override** when appropriate; we do not automatically change it.
+
+~~~powershell
+python tools/fnex_custommod_preflight.py --game-dir "D:\Arcade\FNEX" --json
+python tools/fnex_bms_library_check.py "D:\Arcade\FNEX\BMSData" --check-assets --json
+python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log" --json
+~~~
+
+The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
+
 ## Configuration files and recovery
 
 | Location | Contents |
