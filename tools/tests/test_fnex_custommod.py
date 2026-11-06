@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fnex_custommod_preflight import inspect_installation
 from fnex_bms_library_check import inspect_bms_library, declared_asset_found
+from fnex_custommod_log_report import summarize_log_text, summarize_log_file
 
 
 def codes(report):
@@ -133,6 +134,39 @@ class CustomModLibraryTests(unittest.TestCase):
         result = inspect_bms_library(self.root)
         self.assertEqual(result["counts"]["declared_assets"], 0)
         self.assertEqual(result["counts"]["missing_assets"], 0)
+
+
+class CustomModLogTests(unittest.TestCase):
+    def test_aggregate_without_song_or_player_names(self):
+        fixture = "\n".join([
+            "[10] [version] EZ2CustomMod_v36_2_0_test",
+            "[12] [config] memory tier=2GB keysoundCache=128MB",
+            "[201] [frametime] 300 frames in 5.0s: avg 16.7 ms, worst 42.0 ms, >25ms: 5 | mod: trace 1.0 ms",
+            "[250] [slowframe] 55 ms | tex 13.0 ms filter 10 ms trace 1.0 ms files 2.0 ms video 0.1 ms",
+            "[300] [assets] RENDER FAILED id='private_song_title' role='cover'",
+            "[310] [category] TRUNCATED private_category",
+            "[311] [filter] cat='private_category' ids=2"
+        ])
+        report = summarize_log_text(fixture)
+        self.assertEqual(report["reported_mod_version"], "EZ2CustomMod_v36_2_0_test")
+        self.assertEqual(report["memory_tier"], "2GB")
+        self.assertEqual(report["last_avg_frame_ms"], 16.7)
+        self.assertEqual(report["maximum_reported_worst_frame_ms"], 42.0)
+        self.assertEqual(report["max_slowframe_ms"], 55)
+        self.assertEqual(report["render_or_texture_failures"], 1)
+        self.assertEqual(report["truncation_warnings"], 1)
+        self.assertTrue(report["no_raw_lines"])
+        self.assertNotIn("private_song_title", json.dumps(report))
+        self.assertNotIn("private_category", json.dumps(report))
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "EZ2CustomMod.log"
+            path.write_text(fixture, encoding="utf-8")
+            self.assertEqual(summarize_log_file(path)["slowframe_samples"], 1)
+
+    def test_startup_only_log_explains_missing_frames(self):
+        report = summarize_log_text("[0] [version] EZ2CustomMod_v35_0_0")
+        self.assertEqual(report["frame_samples"], 0)
+        self.assertTrue(any("No frametime" in x for x in report["recommendations"]))
 
 
 if __name__ == "__main__":
