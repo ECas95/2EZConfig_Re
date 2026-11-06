@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "adapters": [
+    {
+      "adapter_id": "fnex_research_placeholder",
+      "game_id": "ez2ac_fn_ex",
+      "fingerprint_type": "on_disk_file",
+      "exe_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "capabilities": [
+        "song.selected",
+        "score.observed"
+      ],
+      "validation_status": "research"
+    }
+  ]
+}
