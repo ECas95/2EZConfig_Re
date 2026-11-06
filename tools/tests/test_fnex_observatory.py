@@ -119,7 +119,7 @@ class TraceReplayTests(unittest.TestCase):
             observations, digest = load_observations(src)
             with self.assertRaisesRegex(ValueError, "requires active stage"):
                 replay(observations, digest)
-            invalid = TRACE[:5] + [TRACE[4]] + TRACE[5:]
+            invalid = TRACE[:6] + [TRACE[5]] + TRACE[6:]
             sample_trace(src, invalid)
             observations, digest = load_observations(src)
             with self.assertRaisesRegex(ValueError, "duplicate finalized"):
