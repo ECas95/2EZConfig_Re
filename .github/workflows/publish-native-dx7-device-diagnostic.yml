@@ -1,0 +1,148 @@
+name: Publish Standalone Native DX7 Device Diagnostic 2
+
+on:
+  push:
+    branches:
+      - 'release-preview/native-dx7-device-diagnostic-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dx7-standalone-device-diagnostic-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout merged master source
+        uses: actions/checkout@v4
+        with:
+          ref: e230d558f592410a59ee4c5f51ccd535b8f304fa
+
+      - name: Configure 32-bit XP-compatible build
+        run: cmake --preset release
+
+      - name: Build standalone probe
+        run: cmake --build --preset release --target 2EZDx7Probe --parallel 2
+
+      - name: Run no-driver native self test
+        run: ctest --test-dir build/release -C Release -R "^dx7_probe_selftest$" --output-on-failure
+
+      - name: Validate deterministic JSON and invalid argument behavior
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = (Resolve-Path 'build/release/bin/2EZDx7Probe.exe').Path
+          $result = & $exe --self-test | ConvertFrom-Json
+          if (-not $result.self_test -or -not $result.read_only) { throw 'Self test did not run' }
+          if ($result.injects_game -or $result.modifies_display_mode -or $result.game_compatibility_verified) { throw 'Invalid safety claims' }
+          if ($result.render_device_test_requested -or $result.render_surface_created -or $result.d3d7_render_device_created) { throw 'Self test must not allocate a graphics device' }
+          $proc = Start-Process -FilePath $exe -ArgumentList '--invalid' -Wait -PassThru -RedirectStandardError "$env:RUNNER_TEMP\dx7-invalid-args.log"
+          if ($proc.ExitCode -ne 2) { throw 'Expected argument validation error status 2' }
+
+      - name: Assemble standalone diagnostics only (no game binaries)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item 'build/release/bin/2EZDx7Probe.exe' 'dist/2EZDx7Probe.exe'
+          Copy-Item 'tools/windows_crash_report.ps1' 'dist/windows_crash_report.ps1'
+          Copy-Item 'tools/gpu_compatibility_report.ps1' 'dist/gpu_compatibility_report.ps1'
+          Copy-Item 'documentation/NATIVE_DX7_PROBE.md' 'dist/NATIVE_DX7_PROBE.md'
+          Copy-Item 'LICENSE' 'dist/LICENSE'
+          Copy-Item 'THIRD_PARTY_LICENSES' 'dist/THIRD_PARTY_LICENSES'
+          @'
+          # DirectX 7 Diagnostic 2 - prueba de dispositivos 3D
+
+          NO sustituyas 2EZConfig.exe ni 2EZ.dll en Final:EX.
+          Ejecuta este programa desde una carpeta aparte.
+          La prueba inicial de la API DirectDraw7 ya funciono en tu PC.
+
+          Para probar el siguiente nivel (creacion real de dispositivo):
+            .\2EZDx7Probe.exe --device-hal | Out-File dx7-device-hal.json -Encoding utf8
+            .\2EZDx7Probe.exe --device-rgb | Out-File dx7-device-rgb.json -Encoding utf8
+
+          Comienza por HAL. RGB es una prueba de renderizado software alternativa.
+          Ambas crean temporalmente una superficie 128x128 y la liberan.
+          NO hacen dibujado, ni presentacion, ni modifican resolucion.
+          NO usan dgVoodoo, hooks, DLL externas ni archivos del juego.
+
+          Si el proceso falla y no genera JSON:
+            .\windows_crash_report.ps1 -AppName 2EZDx7Probe.exe
+
+          Si ambas pruebas salen bien pero Final:EX falla, sigue faltando
+          aislar el modo exclusivo, la creacion de superficies/texturas
+          del propio juego y los hooks de IO/audio/parches de 2EZ.
+
+          Un CreateDevice fallido NO demuestra que toda GPU sea incompatible.
+          Consulta NATIVE_DX7_PROBE.md para interpretar HRESULT.
+          No incluye juegos ni contenidos propietarios.
+                    '@ | Set-Content -Encoding utf8 'dist/LEEME.md'
+          # Refuse any launcher DLL, game executable or graphics wrapper.
+          foreach ($name in @('2EZ.dll','2EZConfig.exe','EZ2AC.exe','ddraw.dll','dxgi.dll','d3d9.dll','2EZWindowMode.exe')) {
+            if (Test-Path "dist/$name") { throw "Unexpected runtime in diagnostic package: $name" }
+          }
+          $base = (Resolve-Path dist).Path
+          $hashes = foreach ($file in @(Get-ChildItem dist -File | Sort-Object Name)) {
+            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($file.Name)"
+          }
+          $hashes | Set-Content -Encoding ascii 'dist/SHA256SUMS.txt'
+          $zip = '2EZConfig_Re-v1.0.0-dx7-diagnostic.2.zip'
+          Compress-Archive -Path 'dist/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zip" | Set-Content -Encoding ascii "$zip.sha256"
+
+      - name: Upload diagnostic artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dx7-device-diagnostic-v2-tested
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-dx7-diagnostic.2.zip
+            2EZConfig_Re-v1.0.0-dx7-diagnostic.2.zip.sha256
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dx7-device-diagnostic-v2-tested
+          path: dist
+
+      - name: Publish isolated test utility
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-dx7-diagnostic.2
+          target_commitish: e230d558f592410a59ee4c5f51ccd535b8f304fa
+          name: 2EZConfig_Re - Standalone DirectX 7 Device Diagnostic 2
+          prerelease: true
+          draft: false
+          make_latest: false
+          body: |
+            ## Direct3D7 native render-device diagnostic — no game patches
+
+            User testing of the previous release confirmed DirectDrawCreateEx, DDSCL_NORMAL, GetDisplayMode and IDirect3D7::EnumDevices succeed (3 legacy D3D device types; not 3 physical GPUs). The crash in actual Final:EX remains unresolved.
+
+            This version adds **two optional isolated device-creation probes**:
+            - `2EZDx7Probe.exe --device-hal`: tries a temporary 128x128 3D video-memory surface, then `IDirect3D7::CreateDevice` with legacy HAL.
+            - `2EZDx7Probe.exe --device-rgb`: tries a temporary 128x128 system-memory 3D surface, then the legacy RGB software device.
+
+            Each test creates a hidden **probe-owned** Win32 window, uses `DDSCL_NORMAL`, records surface/device HRESULT and releases temporary resources. They allocate memory transiently; the new device-mode JSON correctly reports `read_only:false`, but makes no **persistent** OS/game changes. They can enter installed graphics-driver code. Basic, deep and --self-test remain available.
+
+            **No** Final:EX executable, 2EZConfig.exe, 2EZ.dll, dgVoodoo, graphics wrapper, custom hook, game assets, game window restyling, resolution/refresh change, network requests or driver changes are bundled/performed.
+
+            Passing HAL/RGB tests does **not** establish Final:EX compatibility, identify the actual GPU, test a 3D frame, reproduce exclusive fullscreen, or rule out other 2EZ patches. A failing 128x128 normal-mode configuration is not proof that all D3D7 implementations are unsupported.
+
+            Download the ZIP, extract **away from the game folder**, run each optional command separately and share `dx7-device-hal.json`/`dx7-device-rgb.json` or a Windows Application Error 1000 report if the probe itself crashes.
+
+            Source merged in PR #15. Pinned master commit e230d558f592410a59ee4c5f51ccd535b8f304fa.
+          files: |
+            dist/2EZConfig_Re-v1.0.0-dx7-diagnostic.2.zip
+            dist/2EZConfig_Re-v1.0.0-dx7-diagnostic.2.zip.sha256
