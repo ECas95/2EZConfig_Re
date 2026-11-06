@@ -20,6 +20,7 @@
 - [Quick start](#quick-start)
 - [Cabinet diagnostics and extension tools](#cabinet-diagnostics-and-extension-tools)
 - [New hooks: custom songs, score servers and multiplayer](#new-hooks-custom-songs-score-servers-and-multiplayer)
+- [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -102,6 +103,31 @@ python tools/cabinet_profiles.py diff --game-dir "C:\Arcade\EZ2" --profile "D:\B
 
 Read the [new hooks research guide](documentation/NEW_HOOKS.md) for per-title reverse-engineering requirements and safety guards, then the guides on [custom songs](documentation/CUSTOM_SONGS.md), [score APIs](documentation/SCORES_API.md), [multiplayer](documentation/MULTIPLAYER.md) and the [event hook C ABI](documentation/EXTENSION_EVENTS.md). All examples use your own or rights-cleared assets.
 
+## Final:EX research and read-only tools
+
+A privately supplied EZ2AC Final:EX decompilation research archive was reviewed for **behavioral and data-format insights**. We did **not** import reconstructed game source, protected binaries, songs, license data, disassembly dumps or proprietary chart assets. The archive's unpacked-image fingerprint is **not** an on-disk retail-executable fingerprint.
+
+Useful findings now have independent, safe implementations:
+
+| New tool | Use today | Limits |
+| --- | --- | --- |
+| [GDS lane inspector](documentation/fnex/FORMATS.md) | Read a mode `.gds` to inspect player slots, key pairs and ordered SongTrack mappings | Read-only structural subset; no chart loader |
+| [Ranking inspector](documentation/fnex/FORMATS.md) | Read possible local top-five or top-99 score files without modifying them; player names hidden by default | Formats are research-derived; scores are unverified |
+| [Exact-build preflight](documentation/fnex/COMPATIBILITY.md) | SHA-256 user-owned executable and compare with a registered, explicitly on-disk fingerprint | Does not install a hook or prove runtime compatibility |
+
+Try the self-authored sample:
+
+~~~powershell
+python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
+python tools/adapter_compatibility.py --exe "C:\OwnGame\EZ2AC.exe" --manifest examples/fnex/adapter-registry.example.json --json
+~~~
+
+The adapter registry above intentionally contains a **fake all-zero SHA-256**, so a genuine executable should report no matching adapters. No user content is uploaded.
+
+Research guides: [Final:EX integration overview](documentation/fnex/README.md), [data formats](documentation/fnex/FORMATS.md), [hook design](documentation/fnex/HOOK_DESIGN.md), [compatibility](documentation/fnex/COMPATIBILITY.md) and [implementation plan](documentation/fnex/INTEGRATION_PLAN.md).
+
+**What is not available yet:** real Final:EX custom-song injection, an authenticated score-observation hook, latency changes based on hardcoded offsets or synchronized online multiplayer. These remain per-game-version development tasks.
+
 ## Configuration files and recovery
 
 | Location | Contents |
@@ -167,6 +193,7 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [Hook architecture](documentation/NEW_HOOKS.md) | Custom song, score and multiplayer adapter research by game build |
 | [Extension event SDK](documentation/EXTENSION_EVENTS.md) | Local events and exported C ABI with safety rules |
 | [Custom songs](documentation/CUSTOM_SONGS.md) | Licensed pack format, validation and in-game adapter roadmap |
+| [Final:EX research](documentation/fnex/README.md) | Behavioral findings, GDS and ranking inspectors, SHA-256 preflight and guarded adapter plan |
 | [Scores API](documentation/SCORES_API.md) | Local score API, trust limitations and example requests |
 | [Multiplayer](documentation/MULTIPLAYER.md) | Prototype lobby endpoints and network-coordination roadmap |
 | [Cabinet profiles](documentation/CABINET_PROFILES.md) | Offline snapshots, diff and safe restore |
