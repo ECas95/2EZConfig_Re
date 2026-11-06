@@ -1,0 +1,146 @@
+name: Publish Standalone Native DX7 Diagnostic
+
+on:
+  push:
+    branches:
+      - 'release-preview/native-dx7-diagnostic-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dx7-standalone-diagnostic-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout merged master source
+        uses: actions/checkout@v4
+        with:
+          ref: 027d5ee5b63d4036ce943f7a79e9e705255efa45
+
+      - name: Configure 32-bit XP-compatible build
+        run: cmake --preset release
+
+      - name: Build standalone probe
+        run: cmake --build --preset release --target 2EZDx7Probe --parallel 2
+
+      - name: Run no-driver native self test
+        run: ctest --test-dir build/release -C Release -R "^dx7_probe_selftest$" --output-on-failure
+
+      - name: Validate deterministic JSON and invalid argument behavior
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = (Resolve-Path 'build/release/bin/2EZDx7Probe.exe').Path
+          $result = & $exe --self-test | ConvertFrom-Json
+          if (-not $result.self_test -or -not $result.read_only) { throw 'Self test did not run' }
+          if ($result.injects_game -or $result.modifies_display_mode -or $result.game_compatibility_verified) { throw 'Invalid safety claims' }
+          $proc = Start-Process -FilePath $exe -ArgumentList '--invalid' -Wait -PassThru -RedirectStandardError "$env:RUNNER_TEMP\dx7-invalid-args.log"
+          if ($proc.ExitCode -ne 2) { throw 'Expected argument validation error status 2' }
+
+      - name: Assemble standalone diagnostics only (no game binaries)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item 'build/release/bin/2EZDx7Probe.exe' 'dist/2EZDx7Probe.exe'
+          Copy-Item 'tools/windows_crash_report.ps1' 'dist/windows_crash_report.ps1'
+          Copy-Item 'tools/gpu_compatibility_report.ps1' 'dist/gpu_compatibility_report.ps1'
+          Copy-Item 'documentation/NATIVE_DX7_PROBE.md' 'dist/NATIVE_DX7_PROBE.md'
+          Copy-Item 'LICENSE' 'dist/LICENSE'
+          Copy-Item 'THIRD_PARTY_LICENSES' 'dist/THIRD_PARTY_LICENSES'
+          @'
+          # Comprobador independiente DirectDraw 7 / Direct3D 7
+
+          NO sustituyas los archivos 2EZConfig.exe ni 2EZ.dll de tu juego.
+          NO copies 2EZDx7Probe.exe dentro del juego: ejecutalo aparte.
+
+          Este diagnostico usa el DirectDraw 7 propio de Windows desde su
+          directorio de sistema. No cambia resolucion ni frecuencia. No usa
+          dgVoodoo, no crea hooks y no modifica Final:EX.
+
+          1. Extrae este ZIP en una carpeta temporal.
+          2. Abre PowerShell en esa carpeta.
+          3. Ejecuta: .\2EZDx7Probe.exe
+          4. Guarda el JSON: .\2EZDx7Probe.exe | Out-File dx7-basico.json -Encoding utf8
+          5. Prueba D3D7 opcional: .\2EZDx7Probe.exe --deep
+          6. Guarda: .\2EZDx7Probe.exe --deep | Out-File dx7-profundo.json -Encoding utf8
+          7. Si el ejecutable se cierra, revisa el evento de Windows:
+             .\windows_crash_report.ps1 -AppName 2EZDx7Probe.exe
+          8. Compara con el juego (sin hacer nuevos cambios):
+             .\windows_crash_report.ps1 -AppName EZ2AC.exe
+          9. Comparte dx7-basico.json, dx7-profundo.json y, si hay
+             errores, el JSON del reporte de crashes (sin datos personales).
+
+          Si el probe pasa NO significa que Final:EX funcione. La prueba
+          solo examina una pequena parte de la API grafica del sistema.
+          El modo --deep puede entrar en codigo del driver; ejecutalo solo
+          despues de la prueba basica.
+          No modifica el modo de pantalla, drivers, registro ni el juego.
+          No contiene juegos, canciones ni archivos propietarios.
+          '@ | Set-Content -Encoding utf8 'dist/LEEME.md'
+          # Refuse any launcher DLL, game executable or graphics wrapper.
+          foreach ($name in @('2EZ.dll','2EZConfig.exe','EZ2AC.exe','ddraw.dll','dxgi.dll','d3d9.dll','2EZWindowMode.exe')) {
+            if (Test-Path "dist/$name") { throw "Unexpected runtime in diagnostic package: $name" }
+          }
+          $base = (Resolve-Path dist).Path
+          $hashes = foreach ($file in @(Get-ChildItem dist -File | Sort-Object Name)) {
+            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($file.Name)"
+          }
+          $hashes | Set-Content -Encoding ascii 'dist/SHA256SUMS.txt'
+          $zip = '2EZConfig_Re-v1.0.0-dx7-diagnostic.1.zip'
+          Compress-Archive -Path 'dist/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zip" | Set-Content -Encoding ascii "$zip.sha256"
+
+      - name: Upload diagnostic artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dx7-diagnostic-tested
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-dx7-diagnostic.1.zip
+            2EZConfig_Re-v1.0.0-dx7-diagnostic.1.zip.sha256
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dx7-diagnostic-tested
+          path: dist
+
+      - name: Publish isolated test utility
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-dx7-diagnostic.1
+          target_commitish: 027d5ee5b63d4036ce943f7a79e9e705255efa45
+          name: 2EZConfig_Re - Standalone DirectX 7 Diagnostic 1
+          prerelease: true
+          draft: false
+          make_latest: false
+          body: |
+            ## Standalone diagnostic: no need to replace your game or 2EZConfig binaries
+
+            Final:EX still fails despite video previews and changing graphics preferences. This tool tests native system DirectDraw7 and optional Direct3D7 enumeration **outside the game** to separate OS/driver failures from game-specific initialization.
+
+            - **Basic:** run 2EZDx7Probe.exe to test system ddraw.dll, DirectDrawCreateEx, DDSCL_NORMAL and GetDisplayMode. No display mode changes.
+            - **Deep:** run 2EZDx7Probe.exe --deep to also query Direct3D7 and enumerate devices. A broken graphics driver could crash this standalone test process; check Windows Application Event 1000.
+            - Included: privacy-redacted Windows crash report script, GPU inventory script, Spanish instructions, licenses, SHA-256 file hashes.
+
+            **Does not include:** 2EZ.dll, 2EZConfig.exe, game files, 2EZWindowMode.exe, dgVoodoo, OpenGL conversion, display mode changes, new game hooks or external graphics DLLs.
+
+            **Limit:** Passing this test does not mean Final:EX works. It is a small native API capability check. No actual Intel/NVIDIA/AMD game hardware is certified.
+
+            Source merged in PR #14, pinned to master SHA 027d5ee5b63d4036ce943f7a79e9e705255efa45.
+          files: |
+            dist/2EZConfig_Re-v1.0.0-dx7-diagnostic.1.zip
+            dist/2EZConfig_Re-v1.0.0-dx7-diagnostic.1.zip.sha256
