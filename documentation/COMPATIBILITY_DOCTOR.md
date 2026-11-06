@@ -36,6 +36,10 @@ Reports include only chosen executable basename, game ID if found, PE-header pro
 
 The doctor now reports a stored native_graphics_mode setting, warns when an unverified Windowed/Borderless/Draggable setting will be ignored by the launcher, and flags local ddraw.dll/d3d9.dll/dxgi.dll files as **potential compatibility layers** for review. Their presence alone does not establish what they are. The doctor does not delete or move files and never claims an exact runtime module was loaded. See [Native DirectX recovery](NATIVE_DIRECTX_RECOVERY.md).
 
+### Windows crash records
+
+For repeatable Event ID 1000 crashes, use [windows_crash_report.ps1](../tools/windows_crash_report.ps1) to summarize exported EVTX or local Windows Application events without personal full paths. A field Final:EX trace implicated the Intel graphics module `igc32.dll` even with 2EZ DDraw detours disabled. This **does not prove sole driver responsibility**; see [Intel driver crash investigation](INTEL_DRIVER_CRASH.md).
+
 ### PE header warning
 
 A valid-looking PE header is a **very weak** check. It does not prove the executable is an authorized retail build, clean, compatible, or safe to run. For sensitive executable-version-specific patch adapters, use the separate exact-SHA-256 adapter registry and verify expected target memory bytes before any hook.
