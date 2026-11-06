@@ -64,7 +64,7 @@ class PEDoctorTests(unittest.TestCase):
         self.assertIn("injected_dll_missing", {x["code"] for x in report["issues"]})
 
     def test_refuse_unknown_binary_and_traversal(self):
-        (self.root / "EZ2AC.exe").write_text("not actually a PE")
+        (self.root / "EZ2AC.exe").write_bytes(b"not actually a PE" + bytes(128))
         with self.assertRaisesRegex(ValueError, "Missing DOS"):
             inspect_pe(self.root / "EZ2AC.exe")
         report = diagnose_installation(self.root)
