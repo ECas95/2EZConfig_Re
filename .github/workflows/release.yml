@@ -66,11 +66,12 @@ jobs:
             exit 1
           fi
           mkdir -p release
-          cp bin/2EZ.dll bin/2EZConfig.exe bin/2EZWindowMode.exe release/
+          # Unsafe window-only helper is withheld pending genuine DirectDraw window certification.
+          cp bin/2EZ.dll bin/2EZConfig.exe release/
           cp LICENSE THIRD_PARTY_LICENSES release/
           (
             cd release
-            sha256sum 2EZ.dll 2EZConfig.exe 2EZWindowMode.exe > SHA256SUMS.txt
+            sha256sum 2EZ.dll 2EZConfig.exe > SHA256SUMS.txt
             zip -q "../2EZConfig_Re-${GITHUB_REF_NAME}.zip" *
           )
           sha256sum "2EZConfig_Re-${GITHUB_REF_NAME}.zip" > "2EZConfig_Re-${GITHUB_REF_NAME}.zip.sha256"

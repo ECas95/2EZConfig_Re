@@ -4,6 +4,7 @@
 #include "injector.h"
 #include "settings.h"
 #include "game_defs.h"
+#include "presentation_policy.h"
 #include "game_detect.h"
 #include "input_manager.h"
 #include "bindings.h"
@@ -772,9 +773,11 @@ static void renderDisplayTab() {
     auto& settings = g_app.settings.gameSettings();
 
     ImGui::SeparatorText("Game window presentation (experimental)");
-    ImGui::TextWrapped("Native leaves the game unchanged. Other modes launch a separate "
-        "Win32 helper for the selected game PID, after injection. Some exclusive "
-        "DirectDraw/Direct3D titles may reject window restyling.");
+    const std::string gameId = g_app.gameId();
+    const bool verifiedWindowMode = PresentationPolicy::isWindowRestyleCertified(gameId);
+    ImGui::TextWrapped("The experimental Win32 window restyler is disabled for "
+        "unverified game builds. Changing window borders does not convert "
+        "DirectDraw exclusive fullscreen to a real windowed renderer.");
     static const char* modeLabels[] = {
         "Original (game-controlled)",
         "Windowed (resizable title bar)",
@@ -790,9 +793,29 @@ static void renderDisplayTab() {
     for (int i = 0; i < 5; ++i) {
         if (selected == modeIds[i]) selectedMode = i;
     }
+    if (!verifiedWindowMode) {
+        ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+            "Windowed and Borderless are currently unavailable for this game.");
+        if (selectedMode != 0) {
+            ImGui::TextWrapped("A previously saved window mode was detected. "
+                "It will be ignored at launch to prevent a possible crash.");
+            if (ImGui::Button("Reset saved window mode to Original")) {
+                settings["presentation_mode"] = "native";
+                g_app.settings.save();
+                selectedMode = 0;
+            }
+        }
+        // Show the effective mode (Native), never an unavailable saved option.
+        selectedMode = 0;
+        ImGui::BeginDisabled(true);
+    }
     if (ImGui::Combo("Window mode", &selectedMode, modeLabels, 5)) {
         settings["presentation_mode"] = modeIds[selectedMode];
         g_app.settings.save();
+    }
+    if (!verifiedWindowMode) {
+        ImGui::EndDisabled();
+        selectedMode = 0; // Keep disabled follow-on controls hidden.
     }
     if (selectedMode == 1 || selectedMode == 2 || selectedMode == 4) {
         int width  = settings.value("presentation_width", 960);
@@ -839,6 +862,23 @@ static void renderDisplayTab() {
         }
     }
 
+    ImGui::SeparatorText("Native DirectX graphics diagnostic");
+    bool nativeGraphics = settings.value("native_graphics_mode", false);
+    if (ImGui::Checkbox("Native DirectX (no 2EZ DirectDraw/Direct3D hooks)",
+                        &nativeGraphics)) {
+        settings["native_graphics_mode"] = nativeGraphics;
+        g_app.settings.save();
+    }
+    ImGui::TextWrapped("Diagnostic only: bypasses the 2EZ DirectDraw4/7 graphics "
+        "fixes while retaining input and other 2EZ services. Windows still needs "
+        "to support the original DirectX 7 renderer. No OpenGL or DX11 "
+        "conversion takes place.");
+    if (nativeGraphics) {
+        ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+            "2EZ refresh overrides, POINT and texel alignment are inactive "
+            "in native graphics mode.");
+    }
+
     ImGui::SeparatorText("Display refresh request");
     DEVMODEW currentMode = {};
     currentMode.dmSize = sizeof(currentMode);
@@ -850,10 +890,10 @@ static void renderDisplayTab() {
             static_cast<unsigned long>(currentMode.dmBitsPerPel));
         ImGui::TextDisabled("Shown monitor Hz is not the game's real render FPS.");
     }
-    const std::string gameId = g_app.gameId();
     const bool ddraw4 = hasDDraw4Fixes(gameId);
     const bool ddraw7 = hasDDraw7Fixes(gameId);
     if (ddraw4 || ddraw7) {
+        if (nativeGraphics) ImGui::BeginDisabled(true);
         const char* oldKey = ddraw4 ? "ddraw4_force_60hz" : "force_60hz";
         int desired = settings.value("display_refresh_hz", 0);
         if (desired != 60 && desired != 120) desired = 0;
@@ -871,6 +911,7 @@ static void renderDisplayTab() {
         ImGui::TextWrapped("120 Hz is a monitor mode request, not 120 game FPS. "
             "If the requested 120 Hz resolution/color mode is not enumerated, "
             "the game request is left unchanged.");
+        if (nativeGraphics) ImGui::EndDisabled();
     } else {
         ImGui::TextDisabled("No DirectDraw refresh hook is available for this game entry.");
     }
@@ -879,10 +920,12 @@ static void renderDisplayTab() {
     if (ddraw4 || ddraw7) {
         const char* filterKey = ddraw4 ? "ddraw4_point_filtering" : "point_filtering";
         bool sharp = settings.value(filterKey, false);
+        if (nativeGraphics) ImGui::BeginDisabled(true);
         if (ImGui::Checkbox("Pixel-sharp texture sampling (POINT)", &sharp)) {
             settings[filterKey] = sharp;
             g_app.settings.save();
         }
+        if (nativeGraphics) ImGui::EndDisabled();
         ImGui::TextDisabled("POINT is built in; it is not a post-processing shader/upscaler.");
     }
     ImGui::TextWrapped("GLSL shaders, CRT effects, FSR and xBRZ require a separately "
@@ -1621,9 +1664,11 @@ static void startWindowModeHelper(DWORD pid) {
     if (!pid) return;
     const auto& gs = g_app.settings.gameSettings();
     const std::string mode = gs.value("presentation_mode", "native");
-    if (mode == "native") return;
-    if (mode != "windowed" && mode != "borderless" &&
-        mode != "borderless_fullscreen" && mode != "draggable") return;
+    if (!PresentationPolicy::shouldLaunchWindowHelper(g_app.gameId(), mode)) {
+        // Safety invariant: never change a live game window without a
+        // real-game certification of its DirectDraw presentation mode.
+        return;
+    }
     int width = gs.value("presentation_width", 960);
     int height = gs.value("presentation_height", 720);
     if (width < 320 || width > 3840) width = 960;

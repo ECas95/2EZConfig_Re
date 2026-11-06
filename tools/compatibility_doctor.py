@@ -135,6 +135,22 @@ def diagnose_installation(directory: str | Path, exe_name: str | None = None) ->
             "Run the game through a matching 2EZConfig_Re release.")
 
     game_settings = settings if isinstance(settings, dict) else {}
+    if game_settings.get("native_graphics_mode") is True:
+        add("info", "native_directx_selected",
+            "2EZ DirectDraw4/7 detours are disabled by the per-game diagnostic option",
+            "This does not disable input/game hooks or convert DirectX 7 into OpenGL/DX11.")
+    if game_settings.get("presentation_mode", "native") not in ("native", ""):
+        add("warning", "uncertified_window_mode_ignored",
+            "Saved windowed/borderless mode is not certified; the launcher will ignore it",
+            "Use Display > Reset saved window mode to Original for a clean baseline.")
+    # A DLL beside the executable can be loaded instead of the system graphic
+    # runtime due to Windows DLL search rules. Presence alone does not prove
+    # dgVoodoo or another wrapper, so never change or remove these files.
+    for name in ("ddraw.dll", "d3d9.dll", "dxgi.dll"):
+        if (root / name).is_file():
+            add("warning", "local_graphics_dll_present",
+                f"Local graphics-related DLL present: {name}",
+                "Review file provenance before no-wrapper testing. No files are modified.")
     modern_host = platform.system() == "Windows" and platform.release() not in {"XP", "2000"}
     if game_settings.get("audio_eq") or game_settings.get("hypersonik"):
         add("info", "wasapi_backend_selected", "An optional WASAPI audio path is enabled",

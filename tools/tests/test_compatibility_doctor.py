@@ -72,6 +72,24 @@ class PEDoctorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "simple filename"):
             diagnose_installation(self.root, "../outside.exe")
 
+    def test_native_dx_and_local_wrapper_candidates_are_diagnostic_only(self):
+        settings = self.root / "game-settings.json"
+        payload = json.loads(settings.read_text())
+        payload["native_graphics_mode"] = True
+        payload["presentation_mode"] = "windowed"
+        settings.write_text(json.dumps(payload))
+        (self.root / "ddraw.dll").write_bytes(b"local-dll-not-an-executable")
+        before = settings.read_bytes()
+        report = diagnose_installation(self.root)
+        codes = {x["code"] for x in report["issues"]}
+        self.assertIn("native_directx_selected", codes)
+        self.assertIn("uncertified_window_mode_ignored", codes)
+        self.assertIn("local_graphics_dll_present", codes)
+        self.assertEqual(settings.read_bytes(), before)
+        self.assertEqual((self.root / "ddraw.dll").read_bytes(),
+                         b"local-dll-not-an-executable")
+        self.assertNotIn(str(self.root), json.dumps(report))
+
     def test_invalid_settings_does_not_overwrite(self):
         settings = self.root / "game-settings.json"
         settings.write_text("{ not json")

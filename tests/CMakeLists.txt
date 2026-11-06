@@ -20,3 +20,10 @@ target_include_directories(display_refresh_tests PRIVATE
 )
 target_link_libraries(display_refresh_tests PRIVATE user32)
 add_test(NAME display_refresh_tests COMMAND display_refresh_tests)
+
+# Fail-closed window mode safety policy (no game hooks, no binaries).
+add_executable(presentation_policy_tests presentation_policy_test.cpp)
+target_include_directories(presentation_policy_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/common/include
+)
+add_test(NAME presentation_policy_tests COMMAND presentation_policy_tests)

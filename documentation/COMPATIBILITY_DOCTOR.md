@@ -32,6 +32,10 @@ The second command changes only the file analyzed by the doctor. It **does not**
 
 Reports include only chosen executable basename, game ID if found, PE-header properties, OS family and actionable issue codes. **No full game paths, file hashes or proprietary binary data are included**. The doctor does not search arbitrary game files or connect to any network.
 
+### Native DirectX and local graphics DLL diagnostics
+
+The doctor now reports a stored native_graphics_mode setting, warns when an unverified Windowed/Borderless/Draggable setting will be ignored by the launcher, and flags local ddraw.dll/d3d9.dll/dxgi.dll files as **potential compatibility layers** for review. Their presence alone does not establish what they are. The doctor does not delete or move files and never claims an exact runtime module was loaded. See [Native DirectX recovery](NATIVE_DIRECTX_RECOVERY.md).
+
 ### PE header warning
 
 A valid-looking PE header is a **very weak** check. It does not prove the executable is an authorized retail build, clean, compatible, or safe to run. For sensitive executable-version-specific patch adapters, use the separate exact-SHA-256 adapter registry and verify expected target memory bytes before any hook.

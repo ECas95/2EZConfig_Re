@@ -4,9 +4,12 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 
 ## Presentation workstream: windows, shaders and FPS
 
+**Status revision (2026-11-06):** The Win32 window-restyling experiment is **disabled** until game-specific rendering safety is verified. The experimental helper does not convert exclusive DirectDraw into DDSCL_NORMAL and produced a reported Final:EX crash. The immediate safe deliverable is the native-DirectX diagnostic that skips 2EZ's DDraw4/7 graphics hooks and allows a baseline comparison. [Technical recovery](NATIVE_DIRECTX_RECOVERY.md).
+
+
 | Stage | Deliverable | Current status |
 | --- | --- | --- |
-| P0 | Windowed, centered borderless, monitor-filling borderless and draggable modes | Optional Win32 style helper integrated; real games not yet tested |
+| P0 | Windowed, centered borderless, monitor-filling borderless and draggable modes | **Disabled after reported Final:EX crash**; native DirectDraw window support needs verification |
 | P0 | DirectDraw4/7 refresh selector: default / 60 Hz / 120 Hz | Opt-in 120 Hz with enumeration/fallback; *not* 120 true rendered FPS |
 | P0 | Pixel-sharp sampling | Existing POINT texture filter, now visible in Display |
 | P1 | Native pixel-perfect integer scaling and aspect-correct letterboxing | Planned; requires verified presentation backend |
