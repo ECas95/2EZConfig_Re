@@ -31,6 +31,12 @@ A future adapter registry should map exact executable SHA-256 to a verified adap
 
 Planned decision flow: hash executable → identify exact adapter → preflight patterns and original bytes → validate hook target → enable selected event callbacks → fail open if anything differs. Do not reuse a hook signature simply because another title shares a filename.
 
+## Exact Final:EX source-based findings (research-only)
+
+A user-supplied private reverse-engineering archive supports a more precise **per-game adapter plan** for EZ2AC Final:EX: GDS mode descriptors encode lane order, song catalogs incorporate stage/category rules, score calculation has distinct per-mode paths, and local ranking files are a separate presentation/storage layer. These findings do **not** provide a verified deployable runtime hook for the user's installation.
+
+New, runnable **read-only** tools include GDS lane mapping and SVG visualization, legacy ranking layout inspection and a strict on-disk executable SHA-256 adapter check. Exact implementation guidance and provenance are in the [Final:EX research overview](fnex/README.md), [hook design](fnex/HOOK_DESIGN.md) and [compatibility requirements](fnex/COMPATIBILITY.md).
+
 ## Use case A: custom songs (research phase)
 
 **Goal:** expose original, freely distributable or permission-cleared content in the song list.
