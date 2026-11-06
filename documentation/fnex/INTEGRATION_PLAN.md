@@ -14,6 +14,17 @@
 
 **Acceptance:** all synthetic tests pass; no game file changes, game downloads or network requests; unknown executable revisions remain unmatched.
 
+## Milestone F0.5 — passive observatory and contract rehearsal (implemented)
+
+- [x] Inventory existing, user-owned mode descriptors and report lane/key/track conflicts without changing game files.
+- [x] Replay **synthetic** preview, confirmed selection, stage start, finalized P1/P2 results and stage-end observations through a guarded state machine.
+- [x] Emit 2EZConfig-compatible JSONL events with explicit synthetic/unverified provenance; suppress preview and duplicate final-score events.
+- [x] Compare old/new local ranking snapshots without exposing player names or inferring authenticated plays.
+- [x] Test positive and failure-state cases in CI and provide original fixtures.
+- [ ] Capture the equivalent events from an exact, memory-verified Final:EX executable and original cabinet.
+
+See [PASSIVE_OBSERVATORY.md](PASSIVE_OBSERVATORY.md). This phase does not implement live instrumentation.
+
 ## Milestone F1 — passive Final:EX song catalog observer
 
 User-facing target: after a song is *confirmed* in a supported Final:EX build, a single song.selected event can be emitted through the existing opt-in local JSONL SDK.
