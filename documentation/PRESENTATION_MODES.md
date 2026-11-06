@@ -1,5 +1,8 @@
 # Presentation modes, upscalers, shaders and refresh rates
 
+> **Safety update (2026-11-06):** a real Final:EX test reported a crash in Windowed. The old window helper changed Win32 styles without changing DirectDraw's exclusive cooperative mode. As a result, **all non-native window styles are currently disabled in the launcher for unverified games**; a previously saved windowed setting is ignored. This replaces the earlier description of these modes as usable. The new **Native DirectX** setting can disable 2EZ's DirectDraw4/7 graphics detours for diagnosis. See [Native DirectX recovery](NATIVE_DIRECTX_RECOVERY.md).
+
+
 **Status:** Phase 1 implemented in source; physical game and monitor testing remains pending. The original game is unchanged by default. The opt-in helper 2EZWindowMode.exe changes only the Win32 window rectangle/style after the game is launched. This is not a new Direct3D renderer or a general DirectDraw exclusive-mode converter.
 
 ## Controls in Display tab
