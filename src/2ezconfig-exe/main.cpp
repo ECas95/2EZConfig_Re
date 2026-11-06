@@ -15,6 +15,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <windows.h>
+#include <shellapi.h>
 #include <filesystem>
 #include <cstdio>
 #include <fstream>
@@ -977,6 +978,26 @@ static void renderDiagnosticsTab() {
         ImGui::TextDisabled("60 Hz override: check monitor and CRT signal safety.");
     }
     ImGui::TextDisabled("For x86 PE validation and OS hints: tools/compatibility_doctor.py");
+    ImGui::SeparatorText("GPU compatibility (vendor-neutral)");
+    ImGui::TextWrapped("Modern Windows: test the exact game EXE, not 2EZConfig.exe, "
+        "under Settings > System > Display > Graphics. A preference is a hint, "
+        "not proof that legacy DirectDraw/Direct3D7 uses that GPU.");
+    if (ImGui::Button("Open Windows Graphics Settings")) {
+        const HINSTANCE result = ShellExecuteA(
+            nullptr, "open", "ms-settings:display-advancedgraphics",
+            nullptr, nullptr, SW_SHOWNORMAL);
+        if (reinterpret_cast<INT_PTR>(result) <= 32) {
+            MessageBoxA(nullptr,
+                "Windows Graphics Settings is unavailable on this system. "
+                "This shortcut is intended for Windows 10/11; no GPU settings were changed.",
+                "2EZConfig GPU diagnostics", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    ImGui::TextDisabled("Read-only adapter/driver inventory on Windows 10/11:");
+    ImGui::TextDisabled("tools/gpu_compatibility_report.ps1");
+    ImGui::TextWrapped("Laptop hybrid displays can route through an integrated GPU "
+        "even when a discrete GPU is present. Only a live rendering trace "
+        "can verify which GPU handled the legacy game.");
     ImGui::Separator();
     ImGui::TextDisabled("Live HID monitor - read-only. Use Lights to test output ports.");
     ImGui::TextWrapped("Device values refresh while this tab is open. "
