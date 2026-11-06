@@ -181,6 +181,10 @@ Los binarios esperados están en `build/release/bin/`. El compilador GCC 12.2 de
 
 Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e incluyen los archivos de licencia y checksums.
 
+## Prueba de creación de dispositivo Direct3D 7
+
+Los dos JSON anteriores confirmaron que DirectDraw7 y la enumeración de 3 dispositivos Direct3D7 responden correctamente. El siguiente paso opcional prueba **CreateDevice** de forma aislada: `2EZDx7Probe.exe --device-hal` (acelerado) y `2EZDx7Probe.exe --device-rgb` (software). Cada prueba crea y libera una superficie temporal de 128x128 dentro del comprobador; no modifica Final:EX ni la resolución. [Instrucciones](documentation/NATIVE_DX7_PROBE.md).
+
 ## Prueba independiente de DirectDraw 7
 
 Como Final:EX sigue fallando con Native DirectX, ahora disponemos de 2EZDx7Probe.exe. Este comprobador ejecuta el DirectDraw7 del propio Windows en un proceso independiente, sin iniciar Final:EX, sin usar dgVoodoo ni modificar el monitor.
