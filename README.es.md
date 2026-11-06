@@ -9,6 +9,16 @@
 > [!IMPORTANT]
 > Este proyecto **no distribuye juegos ni archivos de los juegos**. Utilízalo únicamente con software e instalaciones que tengas autorización de usar. Conservamos la atribución y licencias del proyecto original.
 
+## Enfoque principal: compatibilidad y servicios para jugadores
+
+**2EZConfig_Re** debe funcionar como una plataforma de compatibilidad y utilidades para EZ2DJ/EZ2AC, no como otro creador de canciones o un motor de charts. Las prioridades pasan a ser Windows modernos, estabilidad de lanzamiento, controles/audio/pantalla y un **sistema de scores con opción de rankings globales**.
+
+**Disponible ahora:** [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md) de solo lectura, mejoras de seguridad contra duplicados en scores locales, rankings de **récord personal** y estadísticas locales desde el dashboard. Todas las puntuaciones siguen siendo **no verificadas**.
+
+**Pendiente:** hooks de resultados finales comprobados en una versión exacta del juego, perfiles de compatibilidad medidos en Windows 10/11, autenticación y servidor global real. La ingeniería inversa se usa como referencia, sin copiar códigos propietarios al fork.
+
+Ver [estrategia de modernización](documentation/MODERNIZATION_STRATEGY.md) y [arquitectura de rankings globales](documentation/GLOBAL_RANKINGS.md).
+
 ## Funcionalidades disponibles
 
 - **Controles:** botones HID/teclado, ejes y turntables mediante dispositivos compatibles, entradas de mouse y salidas de iluminación HID.
@@ -131,6 +141,16 @@ Guía técnica: [integración con EZ2CustomMod](documentation/fnex/CUSTOMMOD_INT
 | `2ez-logs.txt` | Carpeta del juego, si activas logging | Registros para diagnóstico |
 
 Si `game-settings.json` o `global-settings.json` están dañados, la nueva implementación intenta **conservar el archivo corrupto**, recuperar la copia `.bak` válida o usar valores predeterminados, mostrando una advertencia. Esta protección no reemplaza un respaldo completo de tu cabinet.
+
+## Diagnóstico de compatibilidad (Windows modernos)
+
+En una PC con Python 3.10 o superior, analiza tu instalación sin arrancar ni modificar el juego:
+
+~~~powershell
+python tools/compatibility_doctor.py --game-dir "D:\Arcade\EZ2" --json
+~~~
+
+El reporte inspecciona cabeceras PE, concordancia x86 entre el ejecutable y 2EZ.dll, configuración de audio y opciones de 60 Hz. No mide directamente la GPU, DPI ni latencia real; eso requiere pruebas del sistema. [Guía completa](documentation/COMPATIBILITY_DOCTOR.md).
 
 ## Compilar en Windows
 
