@@ -30,7 +30,7 @@ The bundled patch file is refreshed when its embedded `ver` is higher. Edit `use
 
 The Display tab also supports an optional **60 Hz or guarded 120 Hz display request** on titles with the supported DirectDraw4/7 hook, plus existing POINT sampling for sharp pixels. This is not a 120-FPS engine patch or built-in shader framework.
 
-Keep **Original** on unknown builds and original CRT cabinets. Test non-native styles and 120 Hz on a modern LCD first. See [Presentation Modes](PRESENTATION_MODES.md) for rollback and shader/upscaler options.
+Use **Original** for current EZ2 game builds. Windowed, Borderless and Draggable are disabled pending a real native window capability. Do not test 120 Hz on an original CRT without verified timings. See [Native DirectX recovery](NATIVE_DIRECTX_RECOVERY.md) for crash isolation and [Presentation Modes](PRESENTATION_MODES.md) for future options.
 
 ## Launch options and limitations
 - `-skip-config` bypasses the UI; the `skip_ui` field of the game JSON also bypasses it.
