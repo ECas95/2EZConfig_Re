@@ -32,7 +32,7 @@ Microsoft: https://learn.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-id
 - **Game simulation/judgement:** internally timed input, audio, long-note and scoring logic; it is not adjusted by the new refresh selector.
 - **Upscaler/interpolator:** separate presentation filters can improve perceived image quality or insert synthetic frames but cannot magically change the original chart/gameplay tick rate.
 
-A new 120 Hz mode request is issued only if the primary display enumerates an **exact matching width, height, color depth and 120 Hz mode**. Otherwise the original game request is used. The existing 60 Hz option remains compatible with legacy profiles. A matching driver mode still does not guarantee success, smooth pacing, or any number of original render FPS.
+A new 120 Hz mode request is issued only if the primary display enumerates an **exact matching width, height, color depth and 120 Hz mode**. Otherwise the original game request is used. If DirectDraw still rejects the requested 120 Hz mode, the hook retries the original refresh request before returning an error. The existing 60 Hz option remains compatible with legacy profiles. A matching driver mode still does not guarantee success, smooth pacing, or any number of original render FPS.
 
 Microsoft: https://learn.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-idirectdraw7-setdisplaymode
 
