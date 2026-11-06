@@ -1,0 +1,138 @@
+name: Publish Video Test Prerelease
+
+# One-time controlled testing release; not a stable compatibility certification.
+on:
+  push:
+    branches:
+      - 'release-preview/video-test-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 2ez-video-prerelease-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout verified master commit
+        uses: actions/checkout@v4
+        with:
+          ref: ecdcce680a2ab102c56eaaa14144ba122c64ca0d
+
+      - name: Configure XP-compatible x86 Release
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Run compiled tests
+        run: ctest --test-dir build/release -C Release --output-on-failure
+
+      - name: Run Python regression tests
+        run: python -m unittest discover -s tools/tests -p 'test_*.py' -v
+
+      - name: Verify binary outputs and helper safety
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $binaries = @('2EZConfig.exe', '2EZ.dll', '2EZWindowMode.exe')
+          foreach ($name in $binaries) {
+            if (-not (Test-Path "build/release/bin/$name" -PathType Leaf)) { throw "Missing: $name" }
+          }
+          $helper = (Resolve-Path 'build/release/bin/2EZWindowMode.exe').Path
+          $probe = Start-Process -FilePath $helper -ArgumentList '--invalid' -Wait -PassThru
+          if ($probe.ExitCode -ne 2) { throw "Unexpected helper validation status: $($probe.ExitCode)" }
+
+      - name: Assemble portable test ZIP with checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          foreach ($name in @('2EZConfig.exe', '2EZ.dll', '2EZWindowMode.exe')) {
+            Copy-Item "build/release/bin/$name" "release/$name"
+          }
+          Copy-Item LICENSE release/
+          Copy-Item THIRD_PARTY_LICENSES release/
+          Copy-Item README.es.md release/
+          Copy-Item documentation/PRESENTATION_MODES.md release/
+          @(
+            '# 2EZConfig_Re - Video Preview / PRUEBA EXPERIMENTAL',
+            '',
+            '1. Haz una copia de seguridad de 2EZConfig.exe, 2EZ.dll y de tu configuracion existente.',
+            '2. Copia los tres ejecutables de este ZIP a la carpeta del juego autorizado.',
+            '3. Ejecuta 2EZConfig.exe y prueba primero Display > Original, Game default.',
+            '4. Luego prueba Windowed a 960x720, Borderless y Draggable (Ctrl+Alt+click izquierdo).',
+            '5. 120 Hz es una solicitud de refresco del monitor, NO un desbloqueo a 120 FPS reales.',
+            '6. Usa 120 Hz solamente en un monitor moderno compatible; NO en CRT arcade 15 kHz sin verificar.',
+            '7. Un juego DirectDraw con modo exclusivo puede ignorar los estilos de ventana.',
+            '8. Para volver al estado original: Display > Original y Display refresh > Game default.',
+            '9. Los shaders, FSR y los upscalers aun NO estan integrados en el configurador.',
+            '10. Si hay pantalla negra, cierra el juego y desactiva el modo de ventana experimental.',
+            '',
+            'LEE PRESENTATION_MODES.md antes de probarlo en hardware real.',
+            'No se incluyen juegos, canciones ni recursos propietarios.'
+          ) | Set-Content -Path 'release/LEEME-PRUEBA.md' -Encoding utf8
+          $sums = foreach ($name in @('2EZConfig.exe', '2EZ.dll', '2EZWindowMode.exe')) {
+            $hash = (Get-FileHash "release/$name" -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name"
+          }
+          $sums | Set-Content -Path 'release/SHA256SUMS.txt' -Encoding ascii
+          $zip = '2EZConfig_Re-v1.0.0-video-preview.1.zip'
+          Compress-Archive -Path 'release/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zip" | Set-Content -Path "$zip.sha256" -Encoding ascii
+
+      - name: Upload verified test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-preview-release-assets
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-video-preview.1.zip
+            2EZConfig_Re-v1.0.0-video-preview.1.zip.sha256
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - name: Retrieve verified build archive
+        uses: actions/download-artifact@v4
+        with:
+          name: video-preview-release-assets
+          path: dist
+
+      - name: Publish experimental release at verified master commit
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-video-preview.1
+          target_commitish: ecdcce680a2ab102c56eaaa14144ba122c64ca0d
+          name: 2EZConfig_Re - Video Preview 1 (testing only)
+          prerelease: true
+          draft: false
+          make_latest: false
+          body: |
+            ## Versión de prueba de video
+
+            **Pre-release experimental.** No se ha validado todavía en una instalación real de EZ2AC/EZ2DJ ni en un CRT arcade.
+
+            Incluye **2EZConfig.exe**, **2EZ.dll** y **2EZWindowMode.exe** (Windows x86) para probar:
+            - Display: Original, Windowed, Borderless, Borderless Fullscreen y Draggable.
+            - Solicitudes DirectDraw 60/120 Hz con fallback. **120 Hz no significa 120 FPS reales**.
+            - Filtrado POINT ya existente; shaders/FSR no implementados todavía.
+            - Compatibility Doctor y mejoras locales de scores de PR #9.
+
+            **IMPORTANTE:** Haz una copia de seguridad antes de copiar los binarios. Comienza con Original/Game default. Las ventanas DirectDraw exclusivas pueden ignorar los modos nuevos. No selecciones 120 Hz en un CRT arcade 15 kHz sin verificar el hardware.
+
+            El ZIP contiene licencias, documentación, guía LEEME-PRUEBA.md y checksums SHA-256.
+
+            Código: PR #10 y PR #9. Paquete compilado del commit verificado de master.
+
+          files: |
+            dist/2EZConfig_Re-v1.0.0-video-preview.1.zip
+            dist/2EZConfig_Re-v1.0.0-video-preview.1.zip.sha256
