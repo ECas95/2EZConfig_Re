@@ -90,6 +90,20 @@ Documentación ampliada: [análisis de Final:EX](documentation/fnex/README.md), 
 
 **Todavía no están implementados** un loader real de canciones para Final:EX, un hook de resultados verificados ni el multijugador sincronizado dentro del juego. La nueva infraestructura ayuda a desarrollarlos sin depender de offsets de memoria supuestos.
 
+## Observatorio pasivo de Final:EX
+
+Se incorporaron herramientas de investigación **sin modificar el juego**: un inventario de modos `.gds`, un simulador de eventos para probar las transiciones de selección de canción y resultados, y una comparación de rankings locales que oculta los nombres de jugadores.
+
+~~~powershell
+python tools/fnex_mode_inventory.py examples/fnex --json
+python tools/fnex_trace_replay.py --input examples/fnex/synthetic_observations.jsonl --output eventos_sinteticos.jsonl --json
+python tools/event_bridge.py --file eventos_sinteticos.jsonl
+~~~
+
+El segundo comando usa **datos sintéticos**: no detecta canciones reales, no accede a la memoria del arcade y no envía puntuaciones al servidor. Los eventos indican `synthetic=true` y `verified=false`. El último comando es una vista previa local sin transferencia de red.
+
+Guía detallada: [Final:EX Passive Observatory](documentation/fnex/PASSIVE_OBSERVATORY.md). La captura auténtica de resultados y canciones sigue pendiente de un adaptador probado para una versión exacta de Final:EX.
+
 ## Dónde se guardan las configuraciones
 
 | Archivo | Ubicación | Uso |
