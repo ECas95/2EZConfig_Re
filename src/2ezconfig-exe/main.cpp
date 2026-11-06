@@ -805,6 +805,8 @@ static void renderDisplayTab() {
                 selectedMode = 0;
             }
         }
+        // Show the effective mode (Native), never an unavailable saved option.
+        selectedMode = 0;
         ImGui::BeginDisabled(true);
     }
     if (ImGui::Combo("Window mode", &selectedMode, modeLabels, 5)) {
