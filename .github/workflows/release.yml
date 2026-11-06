@@ -26,7 +26,7 @@ jobs:
       - name: Verify outputs
         shell: pwsh
         run: |
-          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll")) {
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll", "build/release/bin/2EZWindowMode.exe")) {
             if (-not (Test-Path $path -PathType Leaf)) { throw "Missing release binary: $path" }
           }
 
@@ -38,6 +38,7 @@ jobs:
           path: |
             build/release/bin/2EZ.dll
             build/release/bin/2EZConfig.exe
+            build/release/bin/2EZWindowMode.exe
 
   release:
     # A manual dispatch on master builds but cannot accidentally publish.
@@ -65,11 +66,11 @@ jobs:
             exit 1
           fi
           mkdir -p release
-          cp bin/2EZ.dll bin/2EZConfig.exe release/
+          cp bin/2EZ.dll bin/2EZConfig.exe bin/2EZWindowMode.exe release/
           cp LICENSE THIRD_PARTY_LICENSES release/
           (
             cd release
-            sha256sum 2EZ.dll 2EZConfig.exe > SHA256SUMS.txt
+            sha256sum 2EZ.dll 2EZConfig.exe 2EZWindowMode.exe > SHA256SUMS.txt
             zip -q "../2EZConfig_Re-${GITHUB_REF_NAME}.zip" *
           )
           sha256sum "2EZConfig_Re-${GITHUB_REF_NAME}.zip" > "2EZConfig_Re-${GITHUB_REF_NAME}.zip.sha256"
