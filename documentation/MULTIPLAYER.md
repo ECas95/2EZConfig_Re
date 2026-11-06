@@ -89,6 +89,12 @@ GET /api/v1/lobbies
 
 Rooms are in memory and lost on restart. There is no automatic expiration, heartbeat, disconnect logic or production identity provider.
 
+## Final:EX research contribution
+
+The private source research describes **local two-player gameplay/result handling**, not a ready-made internet transport. This supports using our existing companion rooms for **asynchronous score battles** rather than inventing direct network input hooks. GDS mode mapping and chart/song fingerprints must match across cabinets, and final scores must be observed from a verified result state.
+
+See [Final:EX hook architecture](fnex/HOOK_DESIGN.md) and [integration milestones](fnex/INTEGRATION_PLAN.md). The ranking file inspector is read-only and cannot authenticate players.
+
 ## Roadmap to genuine cabinet multiplayer
 
 1. **Game-version compatibility**: verify executable build/adapter, chart format, song ID, exact media hash, scoring semantics and timing modifiers on both cabinets.
