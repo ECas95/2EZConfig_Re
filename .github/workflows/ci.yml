@@ -25,6 +25,12 @@ jobs:
           python3 tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output "$RUNNER_TEMP/fnex_lane_map.svg"
           python3 -c 'import sys,xml.etree.ElementTree as ET; ET.parse(sys.argv[1])' "$RUNNER_TEMP/fnex_lane_map.svg"
 
+      - name: Exercise Final EX passive mode inventory and event rehearsal
+        run: |
+          python3 tools/fnex_mode_inventory.py examples/fnex --json > /dev/null
+          python3 tools/fnex_trace_replay.py --input examples/fnex/synthetic_observations.jsonl --output "$RUNNER_TEMP/fnex_events.jsonl" --json > /dev/null
+          python3 tools/event_bridge.py --file "$RUNNER_TEMP/fnex_events.jsonl" > /dev/null
+          python3 -c 'import json,sys; rows=[json.loads(line) for line in open(sys.argv[1])]; assert len(rows)==4 and all(r["data"]["synthetic"] and r["data"]["verified"] is False for r in rows)' "$RUNNER_TEMP/fnex_events.jsonl"
   windows-build:
     runs-on: windows-latest
     needs: validate-json
