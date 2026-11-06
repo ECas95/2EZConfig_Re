@@ -2,6 +2,12 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — native DirectDraw7 diagnostics
+
+- Added an isolated x86 DirectDraw7/Direct3D7 system capability probe with no game injection or graphics wrappers.
+- Basic check uses DDSCL_NORMAL and reads display information without changing it. Optional --deep queries D3D7 devices.
+- Added deterministic --self-test on Windows CI; physical GPU or game compatibility not claimed.
+
 ## Unreleased — vendor-neutral GPU diagnostics
 
 - Added native Windows Graphics Settings shortcut inside 2EZConfig diagnostics; operator selects the real game executable.

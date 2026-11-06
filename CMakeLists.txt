@@ -180,6 +180,7 @@ add_subdirectory(src/libs/settings)
 add_subdirectory(src/libs/input)
 add_subdirectory(src/libs/bindings)
 add_subdirectory(src/2ez-window-mode)
+add_subdirectory(src/2ez-dx7-probe)
 add_subdirectory(src/2ezconfig-exe)
 add_subdirectory(src/2ez-dll)
 
