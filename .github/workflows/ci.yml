@@ -50,6 +50,17 @@ jobs:
           if ($report.crashes[0].exception_code -ne 'c0000005') { throw 'Unexpected exception' }
           if ($report.groups[0].count -ne 1) { throw 'Unexpected crash group count' }
           if (($report | ConvertTo-Json -Depth 8) -match 'TEST-PRIVATE-DO-NOT-OUTPUT') { throw 'User paths were leaked' }
+      - name: Test cross-vendor GPU inventory redaction and zero side effects
+        shell: pwsh
+        run: |
+          $report = & ./tools/gpu_compatibility_report.ps1 -FixturePath ./tools/tests/fixtures/synthetic_gpu_adapters.json | ConvertFrom-Json
+          if ($report.adapter_count -ne 2) { throw 'Expected two synthetic GPU adapters' }
+          if (-not $report.multiple_adapters_detected) { throw 'Expected multiple-adapter detection' }
+          if ($report.modifies_gpu_preference) { throw 'Tool must never change GPU preference' }
+          if ($report.validates_game_compatibility) { throw 'Inventory does not validate game runtime' }
+          $names = @($report.adapters | ForEach-Object { $_.name })
+          if ($names -notcontains 'Vendor A Integrated Sample' -or $names -notcontains 'Vendor B Discrete Sample') { throw 'Vendor-neutral inventory failed' }
+          if (($report | ConvertTo-Json -Depth 8) -match 'PRIVATE-DO-NOT-OUTPUT|PRIVATE-DEVICE-ID') { throw 'Private GPU identifiers leaked' }
       - name: Configure Release (includes verified GCC download)
         run: cmake --preset release
       - name: Build Release

@@ -181,6 +181,16 @@ Los binarios esperados están en `build/release/bin/`. El compilador GCC 12.2 de
 
 Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e incluyen los archivos de licencia y checksums.
 
+## Diagnóstico GPU universal (Intel, NVIDIA, AMD)
+
+2EZConfig_Re no debe exigir una GPU específica. Añadimos acceso a las preferencias gráficas de Windows desde Diagnostics y un inventario local de adaptadores/controladores, independiente de la marca y de solo lectura.
+
+En un portátil híbrido, una GPU NVIDIA disponible no garantiza que el juego DirectDraw/Direct3D7 utilice esa GPU. Prueba Alto rendimiento sobre el ejecutable real del juego, por ejemplo EZ2AC.exe, no solamente el launcher; compara los errores registrados.
+
+Comando: .\tools\gpu_compatibility_report.ps1
+
+El JSON incluye GPU y versiones de driver, pero no IDs de dispositivo, rutas ni datos personales. No fuerza ni cambia GPU. [Guía de compatibilidad por capacidades](documentation/VENDOR_NEUTRAL_GPU.md).
+
 ## Diagnóstico de crashes Intel sin wrappers
 
 Un registro real de Final:EX con **Native DirectX activado** identificó `igc32.dll` (controlador Intel 32.0.101.7088), excepción `0xC0000005`, desplazamiento `0x00E44C06`. Los tres fallos registrados repiten la misma firma; la causa raíz aún necesita aislarse con pruebas del driver/GPU. El diagnóstico **no justifica instalar dgVoodoo u otros wrappers**.

@@ -2,6 +2,12 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Vendor-neutral GPU compatibility
+
+Priority P0: compatibility should be based on OS/renderer capabilities, not a GPU brand. The fork now includes a read-only Windows GPU inventory and a link to OS per-application graphics preferences. This cannot guarantee a given DirectDraw7 process actually renders on the nominated device, especially in laptops.
+
+Next: validate native D3D7 device creation across Intel/NVIDIA/AMD on Windows 10/11, monitor routing, known-good driver comparisons, and exact game build. No dgVoodoo, third-party graphical wrapper, forced GPU routing or silent memory modifications. [Full plan](VENDOR_NEUTRAL_GPU.md).
+
 ## Presentation workstream: windows, shaders and FPS
 
 **Status revision (2026-11-06):** The Win32 window-restyling experiment is **disabled** until game-specific rendering safety is verified. The experimental helper does not convert exclusive DirectDraw into DDSCL_NORMAL and produced a reported Final:EX crash. The immediate safe deliverable is the native-DirectX diagnostic that skips 2EZ's DDraw4/7 graphics hooks and allows a baseline comparison. [Technical recovery](NATIVE_DIRECTX_RECOVERY.md).
