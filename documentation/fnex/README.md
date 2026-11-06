@@ -43,6 +43,7 @@ These tools do **not** activate new game hooks. They only prepare the informatio
 - [Game architecture and hook opportunities](HOOK_DESIGN.md) — song-selection, scoring, audio, charts, latency and multiplayer integration points.
 - [Compatibility and research verification](COMPATIBILITY.md) — exact build checks, no-asset policy, CI and cabinet test matrix.
 - [Actionable integration plan](INTEGRATION_PLAN.md) — what to implement next and measurable acceptance criteria.
+- [Research source crosswalk](SOURCE_MAP.md) — which supplied reference file motivated each conclusion, plus conflicts and confidence levels.
 
 General project resources: [custom songs](../CUSTOM_SONGS.md), [event SDK](../EXTENSION_EVENTS.md), [local scores](../SCORES_API.md), [multiplayer](../MULTIPLAYER.md), [technical roadmap](../ROADMAP.md).
 
