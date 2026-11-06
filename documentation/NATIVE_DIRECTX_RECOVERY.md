@@ -44,6 +44,10 @@ If Trial B still fails, it may reflect native driver/runtime incompatibility or 
 
 To locate the actual crash, obtain the Windows Application Error exception code, faulting module and offset, OS version, GPU/driver and a hash of the locally owned game executable. A final log message is not a reliable faulting instruction. Do not upload commercial game binaries, media, DRM secrets or private player data.
 
+## Follow-up: real Intel driver fault captured
+
+An additional Final:EX run with Native DirectX ON reproduced a crash in `igc32.dll`, version `32.0.101.7088`, exception `0xC0000005`, offset `0x00E44C06`. The Windows logs show three matching fault signatures. This shifts the next diagnostic priority to **Intel GPU/driver compatibility and isolation of other game patches**, rather than assuming Win32 window restyling is the only problem. The exact crash stack and GPU model were not supplied. See [Intel driver crash triage](INTEL_DRIVER_CRASH.md).
+
 ## Next native presentation research
 
 **Preferred:** research an existing *original game option* that creates a real DirectDraw DDSCL_NORMAL window, if one is available for a confirmed build. No such option has been demonstrated in the supplied log.

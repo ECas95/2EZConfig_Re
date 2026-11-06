@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System>
+    <Provider Name="Application Error" />
+    <EventID Qualifiers="0">1000</EventID>
+    <TimeCreated SystemTime="2026-11-06T15:01:43.7280000Z" />
+  </System>
+  <EventData>
+    <Data Name="AppName">EZ2AC.exe</Data>
+    <Data Name="AppVersion">0.0.0.0</Data>
+    <Data Name="ModuleName">examplegpu32.dll</Data>
+    <Data Name="ModuleVersion">1.2.3.4</Data>
+    <Data Name="ExceptionCode">c0000005</Data>
+    <Data Name="FaultingOffset">00012345</Data>
+    <Data Name="ProcessId">1234</Data>
+    <Data Name="AppPath">C:\TEST-PRIVATE-DO-NOT-OUTPUT\EZ2AC.exe</Data>
+    <Data Name="ModulePath">C:\TEST-PRIVATE-DO-NOT-OUTPUT\examplegpu32.dll</Data>
+  </EventData>
+</Event>

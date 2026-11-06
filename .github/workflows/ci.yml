@@ -41,6 +41,15 @@ jobs:
         run: |
           python -m unittest discover -s tools/tests -p 'test_compatibility_doctor.py' -v
           python -m unittest discover -s tools/tests -p 'test_companion_server.py' -v
+      - name: Test redacted Windows application crash diagnostics
+        shell: pwsh
+        run: |
+          $report = & ./tools/windows_crash_report.ps1 -XmlPath ./tools/tests/fixtures/synthetic_application_error.xml | ConvertFrom-Json
+          if ($report.unique_crashes -ne 1) { throw 'Expected one Event 1000 crash' }
+          if ($report.crashes[0].module -ne 'examplegpu32.dll') { throw 'Unexpected fault module' }
+          if ($report.crashes[0].exception_code -ne 'c0000005') { throw 'Unexpected exception' }
+          if ($report.groups[0].count -ne 1) { throw 'Unexpected crash group count' }
+          if (($report | ConvertTo-Json -Depth 8) -match 'TEST-PRIVATE-DO-NOT-OUTPUT') { throw 'User paths were leaked' }
       - name: Configure Release (includes verified GCC download)
         run: cmake --preset release
       - name: Build Release
