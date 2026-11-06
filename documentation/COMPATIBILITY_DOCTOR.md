@@ -36,6 +36,12 @@ Reports include only chosen executable basename, game ID if found, PE-header pro
 
 The doctor now reports a stored native_graphics_mode setting, warns when an unverified Windowed/Borderless/Draggable setting will be ignored by the launcher, and flags local ddraw.dll/d3d9.dll/dxgi.dll files as **potential compatibility layers** for review. Their presence alone does not establish what they are. The doctor does not delete or move files and never claims an exact runtime module was loaded. See [Native DirectX recovery](NATIVE_DIRECTX_RECOVERY.md).
 
+### Installed GPU inventory (vendor-neutral)
+
+The Diagnostics tab now offers a Windows 10/11 graphics-preferences shortcut. Select the actual game executable, not just the launcher; a Windows preference is not proof of DirectDraw7 GPU selection.
+
+Use [gpu_compatibility_report.ps1](../tools/gpu_compatibility_report.ps1) to report Windows GPU names and driver versions without device IDs, serials, user paths or changes to the system. See [Vendor-neutral GPU approach](VENDOR_NEUTRAL_GPU.md).
+
 ### Windows crash records
 
 For repeatable Event ID 1000 crashes, use [windows_crash_report.ps1](../tools/windows_crash_report.ps1) to summarize exported EVTX or local Windows Application events without personal full paths. A field Final:EX trace implicated the Intel graphics module `igc32.dll` even with 2EZ DDraw detours disabled. This **does not prove sole driver responsibility**; see [Intel driver crash investigation](INTEL_DRIVER_CRASH.md).
