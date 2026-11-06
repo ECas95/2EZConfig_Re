@@ -19,6 +19,14 @@ python tools/companion_server.py --host 0.0.0.0 --port 8765 --token "REPLACE_WIT
 
 With the companion running, open **http://127.0.0.1:8765/dashboard**. The built-in HTML interface allows developers to submit sample scores, query the selected song/chart, explore hook events and exercise prototype lobby transitions. It uses only local static HTML/CSS/JavaScript, makes same-origin requests and saves no authorization token in browser storage. **All data is still unverified.** If the API uses a bearer token, enter it into the dashboard's connection field; the page is public static content but API requests remain authenticated.
 
+## Score reliability and player records (implemented)
+
+The local SQLite API now supports an **optional submission_id** on POST /api/v1/scores. Repeated submissions with the same ID and score fields return the same row (duplicate=true), while reusing an ID for different scores is rejected. This is *retry protection*, not proof of gameplay authenticity.
+
+Get one personal best per player for an exact game/song/chart using **GET /api/v1/leaderboard?...&best_only=1** (the original all-submissions behavior remains when omitted). Get local participation totals using **GET /api/v1/player-stats?game_id=...&player_id=...**. Scores continue to return verified=false. Requests that claim verified=true or mark themselves synthetic=true are rejected by the score ingestion endpoint.
+
+The local dashboard now exposes a personal-best switch, stats view and optional submission ID field. A remote/global leaderboard is **not** implemented: the companion is not meant to be deployed publicly. Read [Global rankings](GLOBAL_RANKINGS.md) for full examples, authentication requirements and a phased roadmap.
+
 ## REST endpoints
 
 ### GET /health
@@ -38,7 +46,7 @@ Returns service name, version and status.
 }
 ~~~
 
-HTTP 201 responds with a new ID, stored=true and **verified=false**. Scores are constrained integers 0–1,000,000,000. Clear types are unknown, failed, clear, full_combo and perfect. IDs accept a restricted ASCII character set.
+HTTP 201 responds with an ID, stored=true, duplicate (true or false) and **verified=false**. Optional submission_id provides durable retry deduplication. Scores are constrained integers 0–1,000,000,000. Clear types are unknown, failed, clear, full_combo and perfect. IDs accept a restricted ASCII character set.
 
 PowerShell:
 
@@ -56,7 +64,7 @@ Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8765/api/v1/scores' -Conte
 /api/v1/leaderboard?game_id=ez2dj_7th&song_id=my_first_song&chart_id=track_5k_normal&limit=20
 ~~~
 
-Returns matching entries sorted descending by score, then earlier creation/row ID. Default limit 20, maximum 100. The response includes verified=false. Multiple rows per player may appear; per-user personal-best collapsing is pending.
+Returns matching entries sorted descending by score, then earlier creation/row ID. Default limit 20, maximum 100. Add best_only=1 to select each player ID's highest score on that chart. The response includes verified=false. Multiple rows per player may appear; per-user personal-best collapsing is pending.
 
 ### POST /api/v1/events
 
