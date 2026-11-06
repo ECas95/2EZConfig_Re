@@ -53,33 +53,33 @@ jobs:
           Copy-Item 'documentation/NATIVE_DX7_PROBE.md' 'dist/NATIVE_DX7_PROBE.md'
           Copy-Item 'LICENSE' 'dist/LICENSE'
           Copy-Item 'THIRD_PARTY_LICENSES' 'dist/THIRD_PARTY_LICENSES'
-          @'
-          # DirectX 7 Diagnostic 2 - prueba de dispositivos 3D
-
-          NO sustituyas 2EZConfig.exe ni 2EZ.dll en Final:EX.
-          Ejecuta este programa desde una carpeta aparte.
-          La prueba inicial de la API DirectDraw7 ya funciono en tu PC.
-
-          Para probar el siguiente nivel (creacion real de dispositivo):
-            .\2EZDx7Probe.exe --device-hal | Out-File dx7-device-hal.json -Encoding utf8
-            .\2EZDx7Probe.exe --device-rgb | Out-File dx7-device-rgb.json -Encoding utf8
-
-          Comienza por HAL. RGB es una prueba de renderizado software alternativa.
-          Ambas crean temporalmente una superficie 128x128 y la liberan.
-          NO hacen dibujado, ni presentacion, ni modifican resolucion.
-          NO usan dgVoodoo, hooks, DLL externas ni archivos del juego.
-
-          Si el proceso falla y no genera JSON:
-            .\windows_crash_report.ps1 -AppName 2EZDx7Probe.exe
-
-          Si ambas pruebas salen bien pero Final:EX falla, sigue faltando
-          aislar el modo exclusivo, la creacion de superficies/texturas
-          del propio juego y los hooks de IO/audio/parches de 2EZ.
-
-          Un CreateDevice fallido NO demuestra que toda GPU sea incompatible.
-          Consulta NATIVE_DX7_PROBE.md para interpretar HRESULT.
-          No incluye juegos ni contenidos propietarios.
-          '@ | Set-Content -Encoding utf8 'dist/LEEME.md'
+          @(
+            '# DirectX 7 Diagnostic 2 - prueba de dispositivos 3D',
+            '',
+            'NO sustituyas 2EZConfig.exe ni 2EZ.dll en Final:EX.',
+            'Ejecuta este programa desde una carpeta aparte.',
+            'La prueba inicial de la API DirectDraw7 ya funciono en tu PC.',
+            '',
+            'Para probar el siguiente nivel (creacion real de dispositivo):',
+            '  .\2EZDx7Probe.exe --device-hal | Out-File dx7-device-hal.json -Encoding utf8',
+            '  .\2EZDx7Probe.exe --device-rgb | Out-File dx7-device-rgb.json -Encoding utf8',
+            '',
+            'Comienza por HAL. RGB es una prueba de renderizado software alternativa.',
+            'Ambas crean temporalmente una superficie 128x128 y la liberan.',
+            'NO hacen dibujado, ni presentacion, ni modifican resolucion.',
+            'NO usan dgVoodoo, hooks, DLL externas ni archivos del juego.',
+            '',
+            'Si el proceso falla y no genera JSON:',
+            '  .\windows_crash_report.ps1 -AppName 2EZDx7Probe.exe',
+            '',
+            'Si ambas pruebas salen bien pero Final:EX falla, sigue faltando',
+            'aislar el modo exclusivo, la creacion de superficies/texturas',
+            'del propio juego y los hooks de IO/audio/parches de 2EZ.',
+            '',
+            'Un CreateDevice fallido NO demuestra que toda GPU sea incompatible.',
+            'Consulta NATIVE_DX7_PROBE.md para interpretar HRESULT.',
+            'No incluye juegos ni contenidos propietarios.'
+          ) | Set-Content -Encoding utf8 'dist/LEEME.md'
           # Refuse any launcher DLL, game executable or graphics wrapper.
           foreach ($name in @('2EZ.dll','2EZConfig.exe','EZ2AC.exe','ddraw.dll','dxgi.dll','d3d9.dll','2EZWindowMode.exe')) {
             if (Test-Path "dist/$name") { throw "Unexpected runtime in diagnostic package: $name" }
