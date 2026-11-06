@@ -23,6 +23,7 @@
 - [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
 - [Final:EX passive observatory](#finalex-passive-observatory)
 - [EZ2CustomMod interoperability (external Final:EX song loader)](#ez2custommod-interoperability-external-finalex-song-loader)
+- [Display modernization: window modes and 60/120 Hz](#display-modernization-window-modes-and-60120-hz)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
