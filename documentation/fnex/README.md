@@ -51,6 +51,12 @@ General project resources: [custom songs](../CUSTOM_SONGS.md), [event SDK](../EX
 
 The next phase provides an [offline observatory](PASSIVE_OBSERVATORY.md): mode-directory inventory, guarded rehearsal of synthetic song-confirmed/final-result events, and private ranking snapshot comparison. This **prepares event contracts without injecting a memory hook**. The [fixture trace](../../examples/fnex/synthetic_observations.jsonl) exercises two-player scoring, but does not represent a real cabinet session.
 
+## External EZ2CustomMod compatibility track
+
+A new collection of private source/decompiler/docs/test archives was reviewed. Unlike earlier research-only references, this documents an existing, independently developed **EZ2CustomMod** gameplay DLL with BMS scanning, AutoChart and many FNEX-specific hooks. That DLL is **not** part of this public repository and was not supplied as a compiled release.
+
+Read the [interoperability and preflight guide](CUSTOMMOD_INTEROP.md) and [private-source technical audit](CUSTOMMOD_SOURCE_AUDIT.md). The fork now includes CLI validators, an XP log summary and opt-in GUI compatibility warnings; these do **not** install or validate the external binary. Full memory-hook integration and score auth remain future work.
+
 ## Distribution and trust
 
 The supplied research package explicitly describes itself as private and warns that reconstructed game source can raise copyright and licensing questions despite its own GPL file. **Do not copy it wholesale into this public fork.** The work committed here consists of independently authored validation tools, synthetic data, and high-level compatibility findings. Redistribution of extracted/reconstructed code or specific private artifacts requires a separate rights/provenance review.
