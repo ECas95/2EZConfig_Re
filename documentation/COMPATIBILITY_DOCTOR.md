@@ -44,6 +44,10 @@ A valid-looking PE header is a **very weak** check. It does not prove the execut
 
 Return code is nonzero when an error is found; warning/info reports normally exit successfully to support automated diagnostics.
 
+## Experimental window / refresh options
+
+New Display controls provide window styles using 2EZWindowMode.exe and optional 60/120 Hz DirectDraw mode requests. A read-only PE diagnosis **cannot** establish that borderless windows, upscaling or 120 Hz will work on the installed game/GPU. See [Presentation Modes](PRESENTATION_MODES.md) for limits, 4:3 scaling and CRT precautions.
+
 ## Modern Windows risk matrix
 
 | Component | Legacy game technology | Modern-system validation |

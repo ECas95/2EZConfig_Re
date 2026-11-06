@@ -14,6 +14,7 @@
  */
 
 #include "ddraw4_fix.h"
+#include "display_refresh.h"
 #include "settings.h"
 #include "ddraw_vertex_utils.h"
 #include "ddraw_vtable.h"
@@ -71,6 +72,7 @@ static uintptr_t s_bmpCacheCountAddr = 0;
 // Game-independent fix toggles (applied via vtable chain, work for both ez2dj_1st_se and rmbr_1st)
 static bool s_force32bpp = false;
 static bool s_force60hz = false;
+static int s_refreshHz = 0;
 static bool s_pointFiltering = false;
 static bool s_texelAlignment = false;
 
@@ -105,11 +107,21 @@ static const GUID IID_IDirect3D3_local =
 // ---- SetDisplayMode hook (force 32bpp) ----
 static HRESULT STDMETHODCALLTYPE Hooked_SetDisplayMode(void* self, DWORD w, DWORD h, DWORD bpp, DWORD refresh, DWORD flags) {
     DWORD newBpp     = s_force32bpp ? 32 : bpp;
-    DWORD newRefresh = s_force60hz  ? 60 : refresh;
+    DWORD newRefresh = s_refreshHz ? static_cast<DWORD>(s_refreshHz)
+                                   : (s_force60hz ? 60 : refresh);
+    if (newRefresh == 120 &&
+        !ez2DisplayModeSupportsRefresh(w, h, newBpp, newRefresh)) {
+        newRefresh = refresh;
+    }
     Logger::info("[DDraw4Fix] SetDisplayMode " + std::to_string(w) + "x" + std::to_string(h) +
                  " bpp " + std::to_string(bpp) + "->" + std::to_string(newBpp) +
                  " refresh " + std::to_string(refresh) + "->" + std::to_string(newRefresh));
-    return g_origSetDisplayMode(self, w, h, newBpp, newRefresh, flags);
+    HRESULT result = g_origSetDisplayMode(self, w, h, newBpp, newRefresh, flags);
+    if (FAILED(result) && newRefresh == 120 && refresh != 120) {
+        Logger::warn("[DDraw4Fix] 120 Hz display mode rejected; retrying original refresh.");
+        return g_origSetDisplayMode(self, w, h, newBpp, refresh, flags);
+    }
+    return result;
 }
 
 // ---- DrawPrimitive hook (point filter + texel alignment) ----
@@ -199,7 +211,7 @@ static HRESULT STDMETHODCALLTYPE Hooked_DDrawQueryInterface(IUnknown* self, REFI
     HRESULT hr = g_origDDrawQueryInterface(self, riid, ppv);
     if (!SUCCEEDED(hr) || !ppv || !*ppv) return hr;
 
-    if (riid == IID_IDirectDraw4_local && (s_force32bpp || s_force60hz) && !g_origSetDisplayMode) {
+    if (riid == IID_IDirectDraw4_local && (s_force32bpp || s_force60hz || s_refreshHz) && !g_origSetDisplayMode) {
         void** vtable = *(void***)*ppv;
         if (hook_create(vtable[VT::IDirectDraw4::SetDisplayMode], (void*)Hooked_SetDisplayMode, (void**)&g_origSetDisplayMode))
             Logger::info("[DDraw4Fix] Hooked IDirectDraw4::SetDisplayMode");
@@ -661,13 +673,15 @@ void DDraw4Fix::install(const std::string& gameId, SettingsManager* settings) {
     bool enableFix   = gs.value("ddraw4_fix", false);
     s_force32bpp     = gs.value("ddraw4_force_32bpp", false);
     s_force60hz      = gs.value("ddraw4_force_60hz", false);
+    s_refreshHz      = gs.value("display_refresh_hz", 0);
+    if (s_refreshHz != 60 && s_refreshHz != 120) s_refreshHz = 0;
     s_pointFiltering = gs.value("ddraw4_point_filtering", false);
     s_texelAlignment = gs.value("ddraw4_texel_alignment", false);
 
-    if (s_force32bpp || s_force60hz || s_pointFiltering || s_texelAlignment) {
+    if (s_force32bpp || s_force60hz || s_refreshHz || s_pointFiltering || s_texelAlignment) {
         if (TryHook32bpp()) {
             Logger::info("[DDraw4Fix] Hook chain installed (32bpp=" + std::to_string(s_force32bpp) +
-                         " 60hz=" + std::to_string(s_force60hz) +
+                         " refreshHz=" + std::to_string(s_refreshHz ? s_refreshHz : (s_force60hz ? 60 : 0)) +
                          " pointFilter=" + std::to_string(s_pointFiltering) +
                          " texelAlign=" + std::to_string(s_texelAlignment) + ")");
         } else {

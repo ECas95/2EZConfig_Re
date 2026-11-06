@@ -17,6 +17,12 @@ The user-provided research archives describe several underlying game traits rele
 
 Reference pointers (private, not mirrored): archive docs research/03-engine-architecture.md, 04-file-formats.md, 05-timing-judgement-scoring.md, 08-performance-on-xp.md and original Final:EX RE archive docs/judge-timing.md. Do not import reconstructed private source into this public fork.
 
+## Display presentation milestone
+
+The first presentation milestone adds **native/windowed/borderless/borderless-fullscreen/draggable Win32 styles** via a standalone opt-in helper, plus a **guarded 120 Hz display refresh request** through existing DirectDraw4/7 hooks. The internal gameplay tick rate is unchanged and genuine 120-FPS rendering is **not implemented**. Existing POINT texture filtering remains the only built-in image sampling adjustment.
+
+Postprocessing shader/upscaler integration is a separate validation track. An external Windows 10/11 window upscaler can be evaluated without distributing any third-party DLL, but actual latency and window/exclusive-mode compatibility still require title-specific tests. Details: [Presentation Modes](PRESENTATION_MODES.md).
+
 ## Modern Windows compatibility strategy
 
 ### P0 — Read-only, per-installation diagnosis

@@ -23,6 +23,7 @@
 - [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
 - [Final:EX passive observatory](#finalex-passive-observatory)
 - [EZ2CustomMod interoperability (external Final:EX song loader)](#ez2custommod-interoperability-external-finalex-song-loader)
+- [Display modernization: window modes and 60/120 Hz](#display-modernization-window-modes-and-60120-hz)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -174,6 +175,14 @@ python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log"
 ~~~
 
 The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
+
+## Display modernization: window modes and 60/120 Hz
+
+The **Display** tab now offers an opt-in Windows helper for Windowed, Borderless, Borderless Fullscreen and Draggable (Ctrl+Alt+left-mouse) window styles. Native remains the default; some exclusive DirectDraw games cannot be made windowed by changing OS styles alone.
+
+The DirectDraw4/7 refresh selector now offers **Game default, 60 Hz and experimental 120 Hz**. A 120 Hz monitor request **does not unlock 120 real game FPS**; if the exact display mode is not enumerated, the DLL preserves the game's original refresh request. The original 60 Hz setting is backward compatible.
+
+Built-in POINT texture filtering is available for pixel-sharp visuals. **No GLSL/FSR/CRT shader engine is included yet.** A separate, compatible window upscaler such as Magpie can be evaluated on Windows 10/11, but remains untested and optional. See the [Display & Upscaling guide](documentation/PRESENTATION_MODES.md).
 
 ## Configuration files and recovery
 

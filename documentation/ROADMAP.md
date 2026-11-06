@@ -2,6 +2,19 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Presentation workstream: windows, shaders and FPS
+
+| Stage | Deliverable | Current status |
+| --- | --- | --- |
+| P0 | Windowed, centered borderless, monitor-filling borderless and draggable modes | Optional Win32 style helper integrated; real games not yet tested |
+| P0 | DirectDraw4/7 refresh selector: default / 60 Hz / 120 Hz | Opt-in 120 Hz with enumeration/fallback; *not* 120 true rendered FPS |
+| P0 | Pixel-sharp sampling | Existing POINT texture filter, now visible in Display |
+| P1 | Native pixel-perfect integer scaling and aspect-correct letterboxing | Planned; requires verified presentation backend |
+| P1 | Shader backend with CRT/scanlines/FSR/upscalers | Planned; external Magpie recommended for opt-in research only |
+| P2 | True 120 FPS renderer decoupled from scoring/audio | Research only; per-game timing proof and hardware validation required |
+
+See [Display and Upscaling](PRESENTATION_MODES.md). 15 kHz original CRT users should not enable unverified high refresh modes.
+
 ## Current priority: modern compatibility and scoring
 
 **Decision (November 2026):** 2EZConfig_Re is a compatibility and player-services platform. The user-provided Final:EX research informs feasibility, but adding songs or AutoChart is not the product's main goal.

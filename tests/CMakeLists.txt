@@ -12,3 +12,11 @@ add_test(NAME settings_io_tests COMMAND settings_io_tests)
 add_executable(extension_events_tests extension_events_test.cpp)
 target_link_libraries(extension_events_tests PRIVATE extension_events)
 add_test(NAME extension_events_tests COMMAND extension_events_tests)
+
+# Read-only display refresh enumeration guard (no GPU changes).
+add_executable(display_refresh_tests display_refresh_test.cpp)
+target_include_directories(display_refresh_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/2ez-dll/ddraw
+)
+target_link_libraries(display_refresh_tests PRIVATE user32)
+add_test(NAME display_refresh_tests COMMAND display_refresh_tests)

@@ -142,6 +142,14 @@ Guía técnica: [integración con EZ2CustomMod](documentation/fnex/CUSTOMMOD_INT
 
 Si `game-settings.json` o `global-settings.json` están dañados, la nueva implementación intenta **conservar el archivo corrupto**, recuperar la copia `.bak` válida o usar valores predeterminados, mostrando una advertencia. Esta protección no reemplaza un respaldo completo de tu cabinet.
 
+## Modos de pantalla, escalado y 60/120 Hz
+
+La nueva pestaña **Display** permite elegir Original, **Windowed**, **Borderless**, **Borderless Fullscreen** y **Draggable** (manteniendo Ctrl+Alt mientras arrastras con el mouse). Los modos adicionales usan un pequeño ejecutable auxiliar y son **optativos**: algunos juegos exclusivos DirectDraw pueden ignorarlos.
+
+Ahora es posible solicitar **60 Hz o 120 Hz** en los títulos con soporte DirectDraw4/7. El ajuste 120 Hz es experimental y solo se intenta cuando Windows anuncia ese modo de pantalla. **120 Hz de monitor no significa 120 FPS reales**; los tiempos internos del juego y el scoring no se modifican.
+
+Se conserva el filtrado POINT para píxeles nítidos. Los **shaders CRT, FSR, Anime4K y otros upscalers** necesitarán un backend validado; por ahora recomendamos investigar herramientas externas como Magpie en Windows 10/11, sin instalarlas automáticamente. Consulta la [guía completa de Display](documentation/PRESENTATION_MODES.md).
+
 ## Diagnóstico de compatibilidad (Windows modernos)
 
 En una PC con Python 3.10 o superior, analiza tu instalación sin arrancar ni modificar el juego:

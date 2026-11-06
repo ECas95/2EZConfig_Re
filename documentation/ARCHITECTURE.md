@@ -30,6 +30,14 @@ This document describes the code currently integrated into the fork, including s
 | `.github/workflows/ci.yml` | PR validation, build and tests |
 | `.github/workflows/release.yml` | Controlled version-tag releases |
 
+## Video presentation extension
+
+The **Display** tab persists presentation_mode, presentation_width, presentation_height and display_refresh_hz as per-game settings. On normal successful launch, Injector can return the actual spawned PID; when the mode is non-native, 2EZConfig launches **2EZWindowMode.exe** as an independent process. The helper uses Windows window enumeration and window style/position APIs; no additional game DLL is injected. The special multi-process 6th Trax launcher is intentionally excluded from this helper until tested.
+
+Existing DDraw4/7 SetDisplayMode hooks now support an opt-in 120 Hz request only if the exact mode appears in primary-adapter enumeration. Native game FPS, scoring and audio timing are not modified.
+
+See [Presentation Modes](PRESENTATION_MODES.md).
+
 ## Startup and settings data flow
 
 1. The configurator locates `%APPDATA%\2ezconfig` and copies a newer embedded `patches.json` if needed.

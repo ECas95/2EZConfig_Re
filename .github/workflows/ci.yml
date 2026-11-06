@@ -45,12 +45,19 @@ jobs:
         run: cmake --preset release
       - name: Build Release
         run: cmake --build --preset release --parallel 2
+      - name: Smoke test presentation helper validation
+        shell: pwsh
+        run: |
+          $app = Resolve-Path 'build/release/bin/2EZWindowMode.exe'
+          $process = Start-Process -FilePath $app -ArgumentList '--invalid' -Wait -PassThru
+          if ($process.ExitCode -ne 2) { throw "Expected safe exit code 2, got $($process.ExitCode)" }
+          Write-Host 'Window mode helper rejects invalid invocation without touching game processes.'
       - name: Run settings persistence tests
         run: ctest --test-dir build/release --output-on-failure
       - name: Verify expected outputs
         shell: pwsh
         run: |
-          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll")) {
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll", "build/release/bin/2EZWindowMode.exe")) {
             if (-not (Test-Path $path -PathType Leaf)) { throw "Missing output: $path" }
             $file = Get-Item $path
             if ($file.Length -eq 0) { throw "Empty output: $path" }
@@ -64,3 +71,4 @@ jobs:
           path: |
             build/release/bin/2EZ.dll
             build/release/bin/2EZConfig.exe
+            build/release/bin/2EZWindowMode.exe
