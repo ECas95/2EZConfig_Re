@@ -72,12 +72,21 @@ jobs:
           $process = Start-Process -FilePath $app -ArgumentList '--invalid' -Wait -PassThru
           if ($process.ExitCode -ne 2) { throw "Expected safe exit code 2, got $($process.ExitCode)" }
           Write-Host 'Window mode helper rejects invalid invocation without touching game processes.'
+      - name: Smoke-test native DX7 probe without GPU calls
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $report = & ./build/release/bin/2EZDx7Probe.exe --self-test | ConvertFrom-Json
+          if (-not $report.read_only -or $report.injects_game -or $report.modifies_display_mode) { throw 'Unsafe probe flags' }
+          if (-not $report.self_test -or $report.game_compatibility_verified) { throw 'Unexpected test claim' }
+          & ./build/release/bin/2EZDx7Probe.exe --invalid 2>$null
+          if ($LASTEXITCODE -ne 2) { throw 'Invalid probe invocation should return status 2' }
       - name: Run settings persistence tests
         run: ctest --test-dir build/release --output-on-failure
       - name: Verify expected outputs
         shell: pwsh
         run: |
-          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll", "build/release/bin/2EZWindowMode.exe")) {
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll", "build/release/bin/2EZWindowMode.exe", "build/release/bin/2EZDx7Probe.exe")) {
             if (-not (Test-Path $path -PathType Leaf)) { throw "Missing output: $path" }
             $file = Get-Item $path
             if ($file.Length -eq 0) { throw "Empty output: $path" }
@@ -92,3 +101,4 @@ jobs:
             build/release/bin/2EZ.dll
             build/release/bin/2EZConfig.exe
             build/release/bin/2EZWindowMode.exe
+            build/release/bin/2EZDx7Probe.exe
