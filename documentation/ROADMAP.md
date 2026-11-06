@@ -2,6 +2,12 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Native DirectDraw7 driver isolation
+
+With Final:EX still crashing at igc32.dll, the next diagnostic is the independent, XP-compatible system DirectDraw7/Direct3D7 probe. Its basic mode checks native DirectDraw creation and NORMAL cooperative level; its optional deep mode enumerates D3D7 devices. It never loads 2EZ, modifies the game or runs an API wrapper. A successful isolated test is **not** proof of Final:EX gameplay support.
+
+Results will guide further isolation of the actual game's Direct3D device initialization and the still-active 2EZ startup/audio/IO patches. [Read the diagnostic plan](NATIVE_DX7_PROBE.md).
+
 ## Vendor-neutral GPU compatibility
 
 Priority P0: compatibility should be based on OS/renderer capabilities, not a GPU brand. The fork now includes a read-only Windows GPU inventory and a link to OS per-application graphics preferences. This cannot guarantee a given DirectDraw7 process actually renders on the nominated device, especially in laptops.
