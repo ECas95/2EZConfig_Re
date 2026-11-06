@@ -50,6 +50,14 @@ Supporting guides: [FNEX research overview](fnex/README.md), [source crosswalk](
 
 **Not implemented:** live reading of a Final:EX executable, trusted song-selected or score-finalized detours, score authentication, direct custom-song loading, server-based ranked competition or synchronized multiplayer. F1/F2 still require exact executable and runtime memory validation on authorized hardware.
 
+## External EZ2CustomMod interoperability (new foundation)
+
+**Implemented in this fork:** Final:EX contextual Extra DLL warnings; read-only game executable/Extra DLL/dependency preflight; optional mode/category/song BMSData checker with bounded resource-reference checks; and aggregated, privacy-redacted EZ2CustomMod log diagnostics. [Guide](fnex/CUSTOMMOD_INTEROP.md) and [source audit](fnex/CUSTOMMOD_SOURCE_AUDIT.md).
+
+**New evidence:** user-supplied private mod source documents a separate, already-existing Final:EX custom BMS loader with AutoChart and extensive regression tests. We should **interoperate with it**, not duplicate its unreleased/private game hook implementation in this fork.
+
+**Still required:** independently verified, authorized EZ2CustomMod DLL build and exact retail FNEX executable compatibility; physical XP regression; two-DLL hook overlap analysis; and optional mod-maintained event publishing to our companion. No source/license rights are assumed.
+
 ## P0 — Remaining runtime safety work
 
 | ID | Evidence | Proposed change | Acceptance criteria |

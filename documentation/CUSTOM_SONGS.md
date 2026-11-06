@@ -2,6 +2,12 @@
 
 > **Implemented:** an offline validator for rights-cleared custom song packs. **Not implemented:** injecting/loading songs into any EZ2DJ/EZ2AC/EZ2Dancer/Sabin game. That requires independently validated per-game adapters.
 
+## Existing external Final:EX integration
+
+The private source/docs newly supplied for **EZ2CustomMod** describe a *separately developed*, working Final:EX BMS-to-game loader with an in-memory song catalog and AutoChart. Its source remains private and is **not imported into this fork**. This document continues to describe **2EZConfig_Re's own generic manifest validator**, which still does not inject songs into games.
+
+To evaluate an authorized external installation use our new [read-only EZ2CustomMod interoperability guide](fnex/CUSTOMMOD_INTEROP.md) and [BMSData preflight](fnex/CUSTOMMOD_INTEROP.md#validating-a-bms-library). These use the mod's own three-level mode/category/song layout; it is **not** the same as the generic pack.json schema below.
+
 ## Authoring workflow
 
 ~~~text

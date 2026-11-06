@@ -2,6 +2,14 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — EZ2CustomMod interoperability
+
+- Reviewed a newly supplied private mod source/research/test collection without copying reconstructed game source or protected assets.
+- Added contextual Final:EX GUI warnings for external EZ2CustomMod.dll and executable-name discrepancies.
+- Added read-only installation/dependency preflight, optional BMSData layout/keysound asset checks and redacted XP performance-log diagnostics.
+- Added synthetic regression tests and full interoperability and source audit documentation.
+- No game hooks, score authentication, automatic DLL install or online multiplayer were added.
+
 ## Unreleased — Final:EX Passive Observatory
 
 - Added a read-only per-directory GDS mode inventory with warnings about conflicting keys or chart-track mappings.

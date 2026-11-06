@@ -22,6 +22,7 @@
 - [New hooks: custom songs, score servers and multiplayer](#new-hooks-custom-songs-score-servers-and-multiplayer)
 - [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
 - [Final:EX passive observatory](#finalex-passive-observatory)
+- [EZ2CustomMod interoperability (external Final:EX song loader)](#ez2custommod-interoperability-external-finalex-song-loader)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -148,6 +149,22 @@ python tools/event_bridge.py --file synthetic_events.jsonl
 
 These commands do **not** connect to a game or transmit data; the event bridge defaults to preview/dry-run. The output is always marked `synthetic=true` and `verified=false`. See the [complete observatory and data contracts guide](documentation/fnex/PASSIVE_OBSERVATORY.md). Runtime memory hooks for a specific, validated Final:EX executable are **still pending**.
 
+## EZ2CustomMod interoperability (external Final:EX song loader)
+
+The latest private source/docs supplied for the project describe a **separate, previously developed EZ2CustomMod DLL** with BMS scanning, custom FNEX song integration and AutoChart. **The loader exists in that external project; it is not bundled or implemented by 2EZConfig_Re**, and no private reconstructed game code was imported.
+
+This fork now adds a contextual **Settings → Extra DLLs** readiness warning, an installation preflight, optional BMSData chart/asset diagnostics and privacy-redacted XP performance-log summaries.
+
+**Important:** our Final:EX default executable is `EZ2AC.exe`, while the supplied external mod guide uses `EZ2B.exe`. Verify the actual installed game revision and use **Exe Name Override** when appropriate; we do not automatically change it.
+
+~~~powershell
+python tools/fnex_custommod_preflight.py --game-dir "D:\Arcade\FNEX" --json
+python tools/fnex_bms_library_check.py "D:\Arcade\FNEX\BMSData" --check-assets --json
+python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log" --json
+~~~
+
+The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
+
 ## Configuration files and recovery
 
 | Location | Contents |
@@ -214,6 +231,8 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [Extension event SDK](documentation/EXTENSION_EVENTS.md) | Local events and exported C ABI with safety rules |
 | [Custom songs](documentation/CUSTOM_SONGS.md) | Licensed pack format, validation and in-game adapter roadmap |
 | [Final:EX research](documentation/fnex/README.md) | Behavioral findings, GDS and ranking inspectors, SHA-256 preflight and guarded adapter plan |
+| [EZ2CustomMod interoperability](documentation/fnex/CUSTOMMOD_INTEROP.md) | External mod setup, BMS library checks, XP performance diagnostics and limitations |
+| [Private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md) | Research findings, integration risks and test evidence boundaries |
 | [Scores API](documentation/SCORES_API.md) | Local score API, trust limitations and example requests |
 | [Multiplayer](documentation/MULTIPLAYER.md) | Prototype lobby endpoints and network-coordination roadmap |
 | [Cabinet profiles](documentation/CABINET_PROFILES.md) | Offline snapshots, diff and safe restore |
