@@ -116,7 +116,12 @@ static HRESULT STDMETHODCALLTYPE Hooked_SetDisplayMode(void* self, DWORD w, DWOR
     Logger::info("[DDraw4Fix] SetDisplayMode " + std::to_string(w) + "x" + std::to_string(h) +
                  " bpp " + std::to_string(bpp) + "->" + std::to_string(newBpp) +
                  " refresh " + std::to_string(refresh) + "->" + std::to_string(newRefresh));
-    return g_origSetDisplayMode(self, w, h, newBpp, newRefresh, flags);
+    HRESULT result = g_origSetDisplayMode(self, w, h, newBpp, newRefresh, flags);
+    if (FAILED(result) && newRefresh == 120 && refresh != 120) {
+        Logger::warn("[DDraw4Fix] 120 Hz display mode rejected; retrying original refresh.");
+        return g_origSetDisplayMode(self, w, h, newBpp, refresh, flags);
+    }
+    return result;
 }
 
 // ---- DrawPrimitive hook (point filter + texel alignment) ----
