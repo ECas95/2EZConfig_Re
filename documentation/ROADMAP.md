@@ -44,6 +44,12 @@ These improve preservation research and enable data-driven hook design, but **no
 
 Supporting guides: [FNEX research overview](fnex/README.md), [source crosswalk](fnex/SOURCE_MAP.md), [mode/ranking formats](fnex/FORMATS.md), [hook design](fnex/HOOK_DESIGN.md), [compatibility levels](fnex/COMPATIBILITY.md) and [integration plan](fnex/INTEGRATION_PLAN.md).
 
+## Final:EX Passive Observatory (F0.5)
+
+**Implemented:** multi-mode GDS inventory, isolated synthetic event lifecycle validation (song preview/confirmed, stage, finalized P1/P2 scores, end), a privacy-redacted historical ranking snapshot comparison and offline CI tests. [Operator guide](fnex/PASSIVE_OBSERVATORY.md).
+
+**Not implemented:** live reading of a Final:EX executable, trusted song-selected or score-finalized detours, score authentication, direct custom-song loading, server-based ranked competition or synchronized multiplayer. F1/F2 still require exact executable and runtime memory validation on authorized hardware.
+
 ## P0 — Remaining runtime safety work
 
 | ID | Evidence | Proposed change | Acceptance criteria |
