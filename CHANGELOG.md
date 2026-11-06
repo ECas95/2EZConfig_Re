@@ -2,6 +2,13 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — native DirectX and window presentation safety
+
+- Disabled unsafe Win32 window style changes for all unverified games; previously saved Windowed/Borderless/Draggable settings are ignored automatically.
+- Added an in-app reset for stale window settings and a Native DirectX diagnostic switch that skips 2EZ DirectDraw4/7 graphics detours without disabling IO services.
+- Added CTest coverage for the fail-closed policy, a field crash analysis and a native-versus-graphics-fixes test matrix.
+- No true windowed rendering, Direct3D7-to-OpenGL translation or external graphics wrapper was added.
+
 ## Unreleased — display presentation modes
 
 - Added an optional, standalone x86 Win32 window helper with Windowed, Borderless, Borderless Fullscreen and Ctrl+Alt draggable styles; Native default untouched.
