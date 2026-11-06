@@ -24,6 +24,21 @@ For saving results:
 .\2EZDx7Probe.exe --deep | Out-File -Encoding utf8 dx7-deep.json
 ~~~
 
+## Optional device-creation tests (after basic and deep pass)
+
+Only after verifying basic and deep in the prior standalone release, test the actual **Direct3D7 CreateDevice** API in this isolated tool. These options require a new diagnostic build:
+
+~~~powershell
+.\2EZDx7Probe.exe --device-hal | Out-File -Encoding utf8 dx7-device-hal.json
+.\2EZDx7Probe.exe --device-rgb | Out-File -Encoding utf8 dx7-device-rgb.json
+~~~
+
+The tool creates its **own non-visible Win32 window** and uses DirectDraw DDSCL_NORMAL. It requests a temporary 128x128 3D offscreen surface, then tries to create and release a Direct3D7 rendering device. HAL requests video memory; RGB requests system memory. **These modes allocate a temporary graphics surface** and therefore report `read_only:false`, while still making no changes to the game, filesystem, display mode, GPU preference or installed drivers.
+
+HAL/RGB reflect legacy Direct3D7 device types, **not Intel/NVIDIA/AMD GPU identities**. If a device fails, inspect `hresults.render_surface` and `hresults.create_render_device` to learn which operation failed. If the separate probe crashes, check Event 1000 for `2EZDx7Probe.exe`. A failure in this specific normal-mode/surface test is **not proof that the OS cannot support exclusive-mode Final:EX**, because the requested surface memory/caps differ.
+
+The probe does **not** draw primitives, present video, test z-buffers/textures, play audio, control IO or enter exclusive fullscreen. This is intentionally a small next diagnostic step. Neither a successful HAL nor a successful RGB device certifies Final:EX.
+
 ## Output interpretation
 
 | Field | Meaning |
