@@ -840,6 +840,16 @@ static void renderDisplayTab() {
     }
 
     ImGui::SeparatorText("Display refresh request");
+    DEVMODEW currentMode = {};
+    currentMode.dmSize = sizeof(currentMode);
+    if (EnumDisplaySettingsW(nullptr, ENUM_CURRENT_SETTINGS, &currentMode)) {
+        ImGui::TextDisabled("Primary monitor: %lu x %lu @ %lu Hz, %lu bpp",
+            static_cast<unsigned long>(currentMode.dmPelsWidth),
+            static_cast<unsigned long>(currentMode.dmPelsHeight),
+            static_cast<unsigned long>(currentMode.dmDisplayFrequency),
+            static_cast<unsigned long>(currentMode.dmBitsPerPel));
+        ImGui::TextDisabled("Shown monitor Hz is not the game's real render FPS.");
+    }
     const std::string gameId = g_app.gameId();
     const bool ddraw4 = hasDDraw4Fixes(gameId);
     const bool ddraw7 = hasDDraw7Fixes(gameId);
