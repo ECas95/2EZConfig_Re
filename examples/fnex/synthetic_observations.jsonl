@@ -1,0 +1,8 @@
+{"type":"song.preview","song_id":"original_demo_A","chart_id":"5k_n"}
+{"type":"song.preview","song_id":"original_demo_B","chart_id":"5k_n"}
+{"type":"song.confirmed","song_id":"original_demo_B","chart_id":"5k_n"}
+{"type":"song.confirmed","song_id":"original_demo_B","chart_id":"5k_n"}
+{"type":"stage.started"}
+{"type":"result.finalized","player_slot":1,"score":812345,"clear_type":"clear"}
+{"type":"result.finalized","player_slot":2,"score":798450,"clear_type":"full_combo"}
+{"type":"stage.ended","reason":"completed"}
