@@ -4,6 +4,9 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 
 ## Presentation workstream: windows, shaders and FPS
 
+**Status revision (2026-11-06):** The Win32 window-restyling experiment is **disabled** until game-specific rendering safety is verified. The experimental helper does not convert exclusive DirectDraw into DDSCL_NORMAL and produced a reported Final:EX crash. The immediate safe deliverable is the native-DirectX diagnostic that skips 2EZ's DDraw4/7 graphics hooks and allows a baseline comparison. [Technical recovery](NATIVE_DIRECTX_RECOVERY.md).
+
+
 | Stage | Deliverable | Current status |
 | --- | --- | --- |
 | P0 | Windowed, centered borderless, monitor-filling borderless and draggable modes | Optional Win32 style helper integrated; real games not yet tested |
