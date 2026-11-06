@@ -44,6 +44,16 @@ A pull request to master starts:
 
 **CI success is not a release** and is not verification of Windows XP or real games. Tagged releases are built through a separate workflow.
 
+## Final:EX research utilities
+
+~~~powershell
+python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
+python tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output preview_lanes.svg
+python tools/adapter_compatibility.py --exe "D:\OwnGame\EZ2AC.exe" --manifest examples/fnex/adapter-registry.example.json --json
+~~~
+
+The adapter registry's checksum is intentionally fake. These tools cannot install hooks or verify an actual retail executable, and no original game data is included. Unit tests in tools/tests/test_fnex_research_tools.py exercise only synthetic fixtures. See [Final:EX compatibility and evidence levels](fnex/COMPATIBILITY.md) and the [source crosswalk](fnex/SOURCE_MAP.md).
+
 ## Minimum regression matrix
 
 | Area | Positive case | Failure case | Evidence required |
