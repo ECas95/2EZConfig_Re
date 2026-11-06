@@ -11,6 +11,14 @@ python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
 
 Expected in Slot1: Track8 is **lane 0**, mapped to SongTrack 5; Track2 is **lane 1**, mapped to SongTrack 7. The suffixes of the TrackN labels are not lane indices.
 
+## Visual lane map
+
+~~~powershell
+python tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output synthetic_lanes.svg
+~~~
+
+The SVG is self-contained and uses original drawing code; it does not contain artwork from any commercial game.
+
 ## Exact executable compatibility checker
 
 ~~~powershell
