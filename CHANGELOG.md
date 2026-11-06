@@ -2,6 +2,13 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — vendor-neutral GPU diagnostics
+
+- Added native Windows Graphics Settings shortcut inside 2EZConfig diagnostics; operator selects the real game executable.
+- Added read-only PowerShell GPU inventory for any Windows-reported adapter, without GPU changes or device identifiers.
+- Added synthetic two-vendor fixture and private-field redaction assertions for Windows CI.
+- Documented hybrid laptop routing uncertainty and original DirectDraw7 renderer limitations with no wrappers.
+
 ## Unreleased — Windows crash report diagnostics
 
 - Identified repeated fault fingerprint in user-supplied Final:EX EVTX data: Intel igc32.dll 32.0.101.7088, 0xC0000005, offset 0x00E44C06, with Native DirectX graphics detours disabled in the correlated session.
