@@ -93,6 +93,16 @@ Eventually, yes, as **consented, historical, unverified imports**. However, top-
 
 A real score pipeline should use an exact game-version **result-finalized** hook with session identity and duplicate protection; the ranking inspector is a research/troubleshooting tool, not such a hook.
 
+### Compare two saved ranking snapshots
+
+Use the new **read-only** numerical comparison tool to identify possible changes between two backups:
+
+~~~powershell
+python tools/fnex_ranking_diff.py --before "D:\Backups\rank_before.bin" --after "D:\Backups\rank_after.bin" --format song_top5 --json
+~~~
+
+The report hashes both local snapshots, compares positive numeric scores as multisets and never displays legacy player-name fields. A changed score is **not** proof that a play occurred. Do not auto-submit it to any leaderboard. The [passive observatory guide](PASSIVE_OBSERVATORY.md) explains why.
+
 ## 3. Song metadata, stage selection and chart resources
 
 The private research reports:
