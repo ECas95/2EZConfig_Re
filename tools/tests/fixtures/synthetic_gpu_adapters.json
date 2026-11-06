@@ -1,0 +1,18 @@
+[
+  {
+    "Name": "Vendor A Integrated Sample",
+    "DriverVersion": "1.2.3.4",
+    "Status": "OK",
+    "PNPDeviceID": "PRIVATE-DO-NOT-OUTPUT-123456",
+    "DeviceID": "PRIVATE-DEVICE-ID",
+    "AdapterRAM": 4294967296
+  },
+  {
+    "Name": "Vendor B Discrete Sample",
+    "DriverVersion": "5.6.7.8",
+    "Status": "OK",
+    "PNPDeviceID": "PRIVATE-DO-NOT-OUTPUT-789012",
+    "DeviceID": "PRIVATE-DEVICE-ID",
+    "AdapterRAM": 2147483648
+  }
+]
