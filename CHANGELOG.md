@@ -2,6 +2,13 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — Windows crash report diagnostics
+
+- Identified repeated fault fingerprint in user-supplied Final:EX EVTX data: Intel igc32.dll 32.0.101.7088, 0xC0000005, offset 0x00E44C06, with Native DirectX graphics detours disabled in the correlated session.
+- Added standalone Windows PowerShell Event ID 1000/EVTX analyzer with redacted output and duplicate-export handling; no system/game changes or networking.
+- Added synthetic Event XML fixture/Windows CI parser test and safe Intel GPU driver A/B investigation guidance.
+- Did not introduce wrappers, graphics hooks, driver installation/rollback or unverified crash fixes.
+
 ## Unreleased — native DirectX and window presentation safety
 
 - Disabled unsafe Win32 window style changes for all unverified games; previously saved Windowed/Borderless/Draggable settings are ignored automatically.
