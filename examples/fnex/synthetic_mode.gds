@@ -1,0 +1,28 @@
+; Synthetic test descriptor written for 2EZConfig_Re.
+; Not copied from a commercial game; not a usable mode definition.
+
+[General]
+NumberOfSlot=2
+
+[Slot1]
+NumberOfTrack=2
+Track8 =
+{
+    Key=10,11
+    SongTrack=5
+}
+Track2 =
+{
+    Key=20,-1
+    SongTrack=7
+}
+
+[Slot2]
+NumberOfTrack=1
+Track1 = {
+    Key=30,31
+    SongTrack=9
+}
+
+[Background]
+UnrelatedModeSetting=1

@@ -95,6 +95,16 @@ SQLite scores: ID, created_at timestamp, game_id, song_id, chart_id, player_id, 
 
 The prototype has a shared optional bearer token, not per-player authentication. Results are **not evidence of a legitimate game play** and should never be used for ranked competitions without integrity controls.
 
+## Final:EX local ranking research
+
+The new [ranking inspector](fnex/FORMATS.md) can read candidate Final:EX **top-five** (60-byte) and **top-99** (1,188-byte) ranking files from an operator-owned installation. It defaults to **redacting legacy player names**, makes no network requests and never changes the files.
+
+~~~powershell
+python tools/ranking_inspector.py "D:\OwnGame\system\ranking\some_ranking.bin" --format mode_top99 --json
+~~~
+
+File-backed rankings are **not** authoritative play events and may contain legacy formatting quirks. They do not identify exact song/chart or authenticated player without extra context. Do not upload or convert them automatically into verified competitive scores. Follow [the per-game result-finalized hook plan](fnex/HOOK_DESIGN.md) before designing ingestion from the running game.
+
 ## Production-hardening roadmap
 
 - Verified result extraction at an exact game build's final results state; one event per play.

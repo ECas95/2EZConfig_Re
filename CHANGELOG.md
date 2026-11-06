@@ -2,6 +2,21 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — Final:EX research interoperability
+
+### Added
+- Read-only GDS Slot inspector with explicit file-order lane mapping and standalone SVG visualizer.
+- Privacy-conscious read-only inspectors for candidate local top-five and top-99 ranking files.
+- Exact on-disk executable SHA-256 adapter registry checker; no hook installation and no assumption that an unpacked image hash matches retail files.
+- Synthetic fixtures and regression tests for GDS parsing, SVG, ranking schemas and adapter fingerprinting.
+- Detailed Final:EX research section with formats, source crosswalk, runtime hook plan, compatibility evidence levels and a phased implementation roadmap.
+- English/Spanish README usage and cross-links to the existing custom-song, score, multiplayer and developer guides.
+
+### Limitations
+- No protected source, game assets, disassembly or private reference package was imported.
+- No verified Final:EX selection/result hook, playable custom-song loader or synchronized multiplayer implementation.
+- Real retail game binaries and physical cabinets were not available for this analysis.
+
 ## Unreleased — extension platform milestone
 
 ### Added

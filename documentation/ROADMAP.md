@@ -27,6 +27,23 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 
 **Use-case guides:** [new hooks](NEW_HOOKS.md), [event SDK](EXTENSION_EVENTS.md), [custom songs](CUSTOM_SONGS.md), [score API](SCORES_API.md), [multiplayer](MULTIPLAYER.md), [cabinet profiles](CABINET_PROFILES.md) and [developer verification](DEVELOPER_GUIDE.md).
 
+## Final:EX reverse-engineering research interoperability
+
+**Research-level tools (this milestone):** a privately supplied FNEX decompilation archive has been analyzed without incorporating proprietary or reconstructed game source into this public fork. We added independent read-only tools for **GDS lane/order mapping**, a standalone **SVG lane visualizer**, privacy-conscious **5-/99-slot legacy ranking inspection**, and **exact on-disk executable SHA-256 adapter preflight**, plus synthetic tests and documentation.
+
+These improve preservation research and enable data-driven hook design, but **no executable-specific runtime song/result hook has been validated on real Final:EX hardware**.
+
+| Priority | Next deliverable | Acceptance criteria |
+| --- | --- | --- |
+| F0 | Test GDS/ranking readers against operator-owned Final:EX files | Observed lane order and scores match the game's UI; no writes made |
+| F1 | Passive song-selected hook for one exact build | SHA-256 + memory guards verified; one event after confirmation; unsupported builds rejected |
+| F2 | Passive result-finalized hook | Final score with correct player/mode/song/chart identity; duplicate-safe local event |
+| F3 | Original-song pack loader for one build | One licensed track plays accurately and leaves original content unaffected; safe uninstall |
+| F4 | Input-edge timing comparison | Read-only trace, explicit musical units and hardware evidence before any latency change |
+| F5 | Two-cabinet asynchronous match | Authenticated session, matching chart hash, idempotent final scores and offline fallback |
+
+Supporting guides: [FNEX research overview](fnex/README.md), [source crosswalk](fnex/SOURCE_MAP.md), [mode/ranking formats](fnex/FORMATS.md), [hook design](fnex/HOOK_DESIGN.md), [compatibility levels](fnex/COMPATIBILITY.md) and [integration plan](fnex/INTEGRATION_PLAN.md).
+
 ## P0 — Remaining runtime safety work
 
 | ID | Evidence | Proposed change | Acceptance criteria |
