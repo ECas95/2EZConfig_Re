@@ -15,6 +15,7 @@ import sqlite3
 import threading
 import time
 from collections import deque
+from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -56,7 +57,7 @@ class CompanionState:
         return con
 
     def init_database(self):
-        with self.connect() as con:
+        with closing(self.connect()) as con, con:
             con.execute("""
                 CREATE TABLE IF NOT EXISTS scores (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +107,7 @@ class CompanionState:
             json.dumps(normalized, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
 
-        with self.connect() as con:
+        with closing(self.connect()) as con, con:
             # Serialize the lookup+insert to prevent duplicate race conditions
             # between requests in ThreadingHTTPServer. SQLite manages locks.
             con.execute("BEGIN IMMEDIATE")
@@ -151,7 +152,7 @@ class CompanionState:
         if flag not in {"0", "1"}:
             raise ValueError("best_only must be 0 or 1")
         best_only = flag == "1"
-        with self.connect() as con:
+        with closing(self.connect()) as con, con:
             if best_only:
                 rows = con.execute(
                     "SELECT player_id,score,clear_type,created_at FROM ("
@@ -176,7 +177,7 @@ class CompanionState:
         """Local, pseudonymous participation summary; no cross-game normalization."""
         game = identifier(query.get("game_id", [""])[0], "game_id")
         player = identifier(query.get("player_id", [""])[0], "player_id", 48)
-        with self.connect() as con:
+        with closing(self.connect()) as con, con:
             summary = con.execute(
                 "SELECT COUNT(*) AS plays, MAX(score) AS highest_raw_score,"
                 " MAX(created_at) AS last_played_at "
