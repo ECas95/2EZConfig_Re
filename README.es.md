@@ -73,7 +73,7 @@ Se agregaron tres herramientas Python **de solo lectura**, útiles para document
 
 | Herramienta | Qué hace | Limitación |
 | --- | --- | --- |
-| [Inspector GDS](documentation/fnex/FORMATS.md) | Lee `.gds`, verifica Slot1/Slot2, claves y orden de SongTrack por carril | No modifica archivos ni convierte charts |
+| [Inspector y mapa SVG de GDS](documentation/fnex/FORMATS.md) | Lee `.gds`, verifica carriles y genera diagramas SVG de teclas y tracks | No modifica archivos del juego ni convierte charts |
 | [Inspector de rankings](documentation/fnex/FORMATS.md) | Interpreta posibles formatos de top 5 o top 99 de archivos locales, ocultando los nombres por defecto | No certifica scores ni los sube a Internet |
 | [Comprobador de compatibilidad](documentation/fnex/COMPATIBILITY.md) | Calcula SHA-256 del ejecutable local y compara manifests de adaptadores | No instala hooks; el hash de una imagen desempaquetada no equivale al del archivo original |
 
@@ -81,6 +81,7 @@ Prueba el inspector con un archivo **sintético propio del repositorio**:
 
 ~~~powershell
 python tools/gds_inspector.py examples/fnex/synthetic_mode.gds --json
+python tools/gds_visualizer.py examples/fnex/synthetic_mode.gds --output mapa_carriles.svg
 ~~~
 
 El juego existente se identifica como `ez2ac_fn_ex` en 2EZConfig_Re. Para un futuro hook real aún se necesita verificar **la versión exacta del ejecutable**, las instrucciones esperadas, la compatibilidad de memoria y el funcionamiento en hardware arcade.
