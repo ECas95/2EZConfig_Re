@@ -22,6 +22,7 @@
 - [New hooks: custom songs, score servers and multiplayer](#new-hooks-custom-songs-score-servers-and-multiplayer)
 - [Final:EX research and read-only tools](#finalex-research-and-read-only-tools)
 - [Final:EX passive observatory](#finalex-passive-observatory)
+- [EZ2CustomMod interoperability (external Final:EX song loader)](#ez2custommod-interoperability-external-finalex-song-loader)
 - [Configuration files and recovery](#configuration-files-and-recovery)
 - [Building from source](#building-from-source)
 - [Compatibility and troubleshooting](#compatibility-and-troubleshooting)
@@ -230,6 +231,8 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [Extension event SDK](documentation/EXTENSION_EVENTS.md) | Local events and exported C ABI with safety rules |
 | [Custom songs](documentation/CUSTOM_SONGS.md) | Licensed pack format, validation and in-game adapter roadmap |
 | [Final:EX research](documentation/fnex/README.md) | Behavioral findings, GDS and ranking inspectors, SHA-256 preflight and guarded adapter plan |
+| [EZ2CustomMod interoperability](documentation/fnex/CUSTOMMOD_INTEROP.md) | External mod setup, BMS library checks, XP performance diagnostics and limitations |
+| [Private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md) | Research findings, integration risks and test evidence boundaries |
 | [Scores API](documentation/SCORES_API.md) | Local score API, trust limitations and example requests |
 | [Multiplayer](documentation/MULTIPLAYER.md) | Prototype lobby endpoints and network-coordination roadmap |
 | [Cabinet profiles](documentation/CABINET_PROFILES.md) | Offline snapshots, diff and safe restore |
