@@ -699,6 +699,42 @@ static void renderSettingsTab() {
             g_app.settings.save();
         }
         ImGui::TextDisabled("Space-separated DLLs injected with 2EZ.dll");
+
+        // Optional, read-only interoperability checks for an externally
+        // installed Final:EX mod. Never auto-load or alter other DLLs.
+        const std::string selectedId = g_app.settings.gameSettings().value("game_id", "");
+        if (selectedId == "ez2ac_fn_ex") {
+            std::error_code fsError;
+            const bool modFileExists = std::filesystem::exists("EZ2CustomMod.dll", fsError);
+            std::istringstream configuredDlls(extraDllsBuffer);
+            std::string configuredDll;
+            bool modEnabled = false;
+            while (configuredDlls >> configuredDll) {
+                if (_stricmp(configuredDll.c_str(), "EZ2CustomMod.dll") == 0) modEnabled = true;
+            }
+            if (modEnabled || modFileExists) {
+                ImGui::SeparatorText("Final:EX / EZ2CustomMod");
+                ImGui::TextDisabled("External mod compatibility check (no automatic changes)");
+                if (modEnabled && modFileExists) {
+                    ImGui::TextUnformatted("Extra DLL entry and local mod file detected.");
+                } else if (!modEnabled) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+                        "Mod DLL found, but not enabled in Extra DLLs.");
+                } else {
+                    ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+                        "Mod enabled, but EZ2CustomMod.dll is missing here.");
+                }
+                const std::string selectedExe = g_app.settings.gameSettings().value("exe_name", "");
+                fsError.clear();
+                if (selectedExe.empty() && std::filesystem::exists("EZ2B.exe", fsError)) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+                        "EZ2B.exe detected. Check Exe Name Override for this build.");
+                    ImGui::TextDisabled("Mod documentation uses EZ2B.exe; launcher default is EZ2AC.exe.");
+                }
+                ImGui::TextDisabled("Verify the exact game build before using game memory hooks.");
+                ImGui::TextDisabled("For detailed checks: tools/fnex_custommod_preflight.py");
+            }
+        }
     }
 
     ImGui::BeginChild("##settingsScroll", ImVec2(0, 0), false);
