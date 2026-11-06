@@ -66,6 +66,20 @@ The trace file is an original fixture; it does not originate from a cabinet. The
 
 Tests: tools/tests/test_fnex_observatory.py. Detailed guide: [PASSIVE_OBSERVATORY.md](fnex/PASSIVE_OBSERVATORY.md).
 
+## Modern Windows and score service checks
+
+Run the read-only compatibility tool against your own authorized game folder on a modern helper PC:
+
+~~~powershell
+python tools/compatibility_doctor.py --game-dir "D:\Arcade\EZ2" --json
+python -m unittest discover -s tools/tests -p 'test_compatibility_doctor.py' -v
+python -m unittest discover -s tools/tests -p 'test_companion_server.py' -v
+~~~
+
+The Python suite uses synthetic executable headers; it cannot certify a real game or graphics/audio performance. The Windows CI now exercises the compatibility and score tests as well as the existing CMake/CTest build. The score tests cover same-ID retries, concurrent submissions, per-player PBs and unverified stats.
+
+New product context: [Modernization Strategy](MODERNIZATION_STRATEGY.md), [Compatibility Doctor](COMPATIBILITY_DOCTOR.md) and [Global Rankings](GLOBAL_RANKINGS.md).
+
 ## Minimum regression matrix
 
 | Area | Positive case | Failure case | Evidence required |

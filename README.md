@@ -29,6 +29,16 @@
 - [Development status and roadmap](#development-status-and-roadmap)
 - [Project documentation and contributing](#project-documentation-and-contributing)
 
+## Product direction — compatibility and scoring first
+
+The main priority of **2EZConfig_Re** is to make existing EZ2 arcade games more reliable on modern Windows while preserving legacy cabinets, and to offer **opt-in player services** without modifying note judgement or the original song catalogue.
+
+**New working foundations:** an in-app Diagnostics **Check launcher files** action, an offline [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md), [idempotent local score submissions and personal-best leaderboards](documentation/GLOBAL_RANKINGS.md), and a browser dashboard that shows unverified scores and player statistics.
+
+**Planned, not yet delivered:** tested Windows 10/11 compatibility profiles, passive final-result capture, a secure global ranking service, account/player identities and verified score synchronization. External custom-song mods remain a separate optional interoperability track, not the core roadmap.
+
+Read the [modernization strategy](documentation/MODERNIZATION_STRATEGY.md) for priorities, reliability boundaries and phased delivery.
+
 ## Features
 
 | Area | Current capabilities |
@@ -42,7 +52,7 @@
 | **Build and quality** | CMake/MinGW 32-bit build, SHA-256-verified compiler archive, pinned dependencies and Windows CI + settings recovery tests |
 | **Device diagnostics** | Read-only live HID device/button/axis monitor in the new Diagnostics tab |
 | **Extensions SDK** | Disabled-by-default local JSONL events and an exported C ABI for trusted, version-specific hook adapters |
-| **Companion tools** | Offline cabinet profiles, custom-song pack validation, a localhost SQLite score API and prototype multiplayer lobbies (Python 3.10+; separate from the game) |
+| **Companion tools** | Read-only Compatibility Doctor, offline cabinet profiles, local idempotent score API, personal-best leaderboards and unverified player stats (Python 3.10+); prototype lobbies remain separate from game execution |
 
 **Limitations:** EZ2Dancer pad/hand-sensor lighting is not complete. Audio EQ/Hypersonik uses WASAPI and requires Vista or newer. Not every game build supports every patch. Automatic executable detection is a compatibility lookup, **not a cryptographic security guarantee**.
 
@@ -234,6 +244,9 @@ Every pull request can run **JSON validation**, a **Windows build**, **CTest set
 | [EZ2CustomMod interoperability](documentation/fnex/CUSTOMMOD_INTEROP.md) | External mod setup, BMS library checks, XP performance diagnostics and limitations |
 | [Private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md) | Research findings, integration risks and test evidence boundaries |
 | [Scores API](documentation/SCORES_API.md) | Local score API, trust limitations and example requests |
+| [Global rankings roadmap](documentation/GLOBAL_RANKINGS.md) | Idempotent scoring foundation and secure global services architecture |
+| [Modernization strategy](documentation/MODERNIZATION_STRATEGY.md) | Compatibility-first product priorities and phased delivery |
+| [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md) | Read-only x86/PE checks, audio/display warnings and modern OS risks |
 | [Multiplayer](documentation/MULTIPLAYER.md) | Prototype lobby endpoints and network-coordination roadmap |
 | [Cabinet profiles](documentation/CABINET_PROFILES.md) | Offline snapshots, diff and safe restore |
 | [Patch authoring](documentation/patches/README.md) | Game IDs, custom JSON format and patch safety |

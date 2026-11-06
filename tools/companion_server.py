@@ -7,6 +7,7 @@ Runs on a modern Python 3.10+ host, not on Windows XP.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import hmac
 import json
 import secrets
@@ -14,6 +15,7 @@ import sqlite3
 import threading
 import time
 from collections import deque
+from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -55,7 +57,7 @@ class CompanionState:
         return con
 
     def init_database(self):
-        with self.connect() as con:
+        with closing(self.connect()) as con, con:
             con.execute("""
                 CREATE TABLE IF NOT EXISTS scores (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,8 +70,23 @@ class CompanionState:
                   clear_type TEXT NOT NULL
                 )""")
             con.execute("CREATE INDEX IF NOT EXISTS idx_scores_chart ON scores (game_id, song_id, chart_id, score DESC)")
+            # Optional idempotency ledger. Keeps the original scores table layout
+            # intact for users upgrading existing local SQLite databases.
+            con.execute("""
+                CREATE TABLE IF NOT EXISTS score_submission_ids (
+                    submission_id TEXT PRIMARY KEY,
+                    score_id INTEGER NOT NULL,
+                    payload_sha256 TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    FOREIGN KEY(score_id) REFERENCES scores(id)
+                )""")
 
     def add_score(self, payload):
+        """Store UNVERIFIED scores; optionally deduplicate caller-stable submissions.
+
+        This prevents accidental retries from duplicating local entries. A
+        caller-supplied ID is NOT an authenticated play or player identity.
+        """
         game = identifier(payload.get("game_id"), "game_id")
         song = identifier(payload.get("song_id"), "song_id")
         chart = identifier(payload.get("chart_id"), "chart_id")
@@ -78,25 +95,102 @@ class CompanionState:
         clear_type = payload.get("clear_type", "unknown")
         if clear_type not in CLEAR_TYPES:
             raise ValueError("unsupported clear_type")
-        with self.connect() as con:
+        if payload.get("verified") is True:
+            raise ValueError("client cannot claim a score is verified")
+        if payload.get("synthetic") is True:
+            raise ValueError("synthetic fixture events are not accepted as score submissions")
+        submission_id = payload.get("submission_id")
+        if submission_id is not None:
+            submission_id = identifier(submission_id, "submission_id", 96)
+        normalized = [game, song, chart, player, score, clear_type]
+        digest = hashlib.sha256(
+            json.dumps(normalized, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+
+        with closing(self.connect()) as con, con:
+            # Serialize the lookup+insert to prevent duplicate race conditions
+            # between requests in ThreadingHTTPServer. SQLite manages locks.
+            con.execute("BEGIN IMMEDIATE")
+            if submission_id is not None:
+                previous = con.execute(
+                    "SELECT score_id,payload_sha256 FROM score_submission_ids "
+                    "WHERE submission_id=?", (submission_id,)
+                ).fetchone()
+                if previous is not None:
+                    if previous["payload_sha256"] != digest:
+                        raise ValueError("submission_id already used with different score data")
+                    return {
+                        "id": previous["score_id"], "stored": True,
+                        "duplicate": True, "verified": False
+                    }
+
+            now = int(time.time())
             cursor = con.execute(
                 "INSERT INTO scores (created_at,game_id,song_id,chart_id,player_id,score,clear_type) "
                 "VALUES (?,?,?,?,?,?,?)",
-                (int(time.time()), game, song, chart, player, score, clear_type))
-            return {"id": cursor.lastrowid, "stored": True, "verified": False}
+                (now, game, song, chart, player, score, clear_type)
+            )
+            score_id = cursor.lastrowid
+            if submission_id is not None:
+                con.execute(
+                    "INSERT INTO score_submission_ids "
+                    "(submission_id,score_id,payload_sha256,created_at) VALUES (?,?,?,?)",
+                    (submission_id, score_id, digest, now)
+                )
+            return {
+                "id": score_id, "stored": True,
+                "duplicate": False, "verified": False
+            }
 
     def leaderboard(self, query):
+        """Entries for one exact game/song/chart; optionally one PB per player."""
         game = identifier(query.get("game_id", [""])[0], "game_id")
         song = identifier(query.get("song_id", [""])[0], "song_id")
         chart = identifier(query.get("chart_id", [""])[0], "chart_id")
         limit = integer(int(query.get("limit", ["20"])[0]), "limit", 1, 100)
-        with self.connect() as con:
-            rows = con.execute(
-                "SELECT player_id,score,clear_type,created_at FROM scores "
-                "WHERE game_id=? AND song_id=? AND chart_id=? "
-                "ORDER BY score DESC, created_at ASC, id ASC LIMIT ?",
-                (game, song, chart, limit)).fetchall()
-        return {"entries": [dict(row) for row in rows], "verified": False}
+        flag = query.get("best_only", ["0"])[0]
+        if flag not in {"0", "1"}:
+            raise ValueError("best_only must be 0 or 1")
+        best_only = flag == "1"
+        with closing(self.connect()) as con, con:
+            if best_only:
+                rows = con.execute(
+                    "SELECT player_id,score,clear_type,created_at FROM ("
+                    " SELECT player_id,score,clear_type,created_at,id,"
+                    " ROW_NUMBER() OVER (PARTITION BY player_id"
+                    " ORDER BY score DESC,created_at ASC,id ASC) AS rn"
+                    " FROM scores WHERE game_id=? AND song_id=? AND chart_id=?"
+                    ") WHERE rn=1 ORDER BY score DESC,created_at ASC,id ASC LIMIT ?",
+                    (game, song, chart, limit)
+                ).fetchall()
+            else:
+                rows = con.execute(
+                    "SELECT player_id,score,clear_type,created_at FROM scores "
+                    "WHERE game_id=? AND song_id=? AND chart_id=? "
+                    "ORDER BY score DESC, created_at ASC, id ASC LIMIT ?",
+                    (game, song, chart, limit)
+                ).fetchall()
+        return {"entries": [dict(row) for row in rows],
+                "best_only": best_only, "verified": False}
+
+    def player_stats(self, query):
+        """Local, pseudonymous participation summary; no cross-game normalization."""
+        game = identifier(query.get("game_id", [""])[0], "game_id")
+        player = identifier(query.get("player_id", [""])[0], "player_id", 48)
+        with closing(self.connect()) as con, con:
+            summary = con.execute(
+                "SELECT COUNT(*) AS plays, MAX(score) AS highest_raw_score,"
+                " MAX(created_at) AS last_played_at "
+                "FROM scores WHERE game_id=? AND player_id=?", (game, player)
+            ).fetchone()
+            distinct_chart_count = con.execute(
+                "SELECT COUNT(*) FROM (SELECT 1 FROM scores "
+                "WHERE game_id=? AND player_id=? GROUP BY song_id,chart_id)",
+                (game, player)
+            ).fetchone()[0]
+        return {"game_id": game, "player_id": player,
+                **dict(summary), "charts_played": distinct_chart_count,
+                "verified": False, "warning": "Scores are unverified, not game normalized"}
 
     def create_room(self, payload):
         game = identifier(payload.get("game_id"), "game_id")
@@ -278,6 +372,8 @@ def build_handler(state: CompanionState, token: str | None):
                     result = {"status": "ok", "name": "2EZConfig companion", "version": "0.1"}
                 elif method == "GET" and path == "/api/v1/leaderboard":
                     result = state.leaderboard(parse_qs(route.query))
+                elif method == "GET" and path == "/api/v1/player-stats":
+                    result = state.player_stats(parse_qs(route.query))
                 elif method == "POST" and path == "/api/v1/scores":
                     result = state.add_score(payload)
                 elif method == "GET" and path == "/api/v1/events":

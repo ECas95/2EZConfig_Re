@@ -2,6 +2,17 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — compatibility and score reliability
+
+- Product roadmap reprioritized around modern Windows interoperability, cabinet reliability and optional global player services instead of new song loaders.
+- Added offline, read-only Compatibility Doctor for x86 PE checks, selected executable, missing 2EZ.dll and relevant display/audio configuration hints; added a button-triggered file readiness check inside the Diagnostics tab.
+- Added optional idempotent score submission IDs, race-safe local retries, per-player personal-best boards and pseudonymous local stats.
+- Local dashboard now exposes retry ID, personal-best toggle and player statistics.
+- Added explicit synthetic/claimed-verified score rejection at the local score submission endpoint; all accepted scores remain unverified.
+- Added synthetic PE and score concurrency regression tests; compatibility and scoring Python tests also run on the Windows CI runner.
+- Added modernization and global score architecture docs with strong requirements for real score-finalized observation and secure online service.
+- No public/global ranking server, Windows graphics wrapper, real score hook or broad Windows 11 compatibility claim is introduced.
+
 ## Unreleased — EZ2CustomMod interoperability
 
 - Reviewed a newly supplied private mod source/research/test collection without copying reconstructed game source or protected assets.

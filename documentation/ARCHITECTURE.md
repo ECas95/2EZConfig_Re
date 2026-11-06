@@ -10,10 +10,11 @@ This document describes the code currently integrated into the fork, including s
 | `src/2ez-dll/dll.cpp` | In-game module initialization, game-family IO hooking, patch timing, DirectDraw/audio hooks |
 | `src/libs/input/` | HID/keyboard/mouse enumeration, capture, input state and outputs |
 | `src/libs/extension_events/` | Optional local JSONL event spool and schema validation (no network calls) |
-| `tools/companion_server.py` | Modern-host prototype: local scores, unverified leaderboards, event viewer and in-memory lobby coordination |
+| `tools/companion_server.py` | Modern-host prototype: idempotent unverified scores, personal-best leaderboard, player stats, event viewer and in-memory lobby coordination |
 | `tools/event_bridge.py` | Dry-run-first explicit JSONL-to-companion event relay |
 | `tools/songpack_validator.py` | Offline structural validation of rights-cleared song pack manifests |
 | `tools/cabinet_profiles.py` | Export/diff/apply for existing JSON configurations; no GUI selector |
+| `tools/compatibility_doctor.py` | Offline read-only PE architecture and modern OS compatibility diagnostics |
 | `src/libs/bindings/` | Binding models and JSON serialization |
 | `src/libs/settings/settings.cpp` | `SettingsManager` facade, game/global state and recovery warnings |
 | `src/libs/settings/settings_io.cpp` | JSON object parsing, atomic-style save, `.bak` snapshot, preservation of damaged files |

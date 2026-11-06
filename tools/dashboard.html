@@ -49,7 +49,7 @@ td,th{text-align:left;padding:9px 6px;border-bottom:1px solid #33485e}th{color:#
 <span id="error" class="status danger" role="status" aria-live="polite"></span>
 </section>
 <section class="card">
-<h2>Submit a synthetic score</h2>
+<h2>Submit a test score</h2>
 <p class="muted small">Data is stored in SQLite as <strong>verified=false</strong>; it is not captured from the game.</p>
 <form id="scoreForm" class="fields">
 <div><label for="sgame">Game ID</label><input required id="sgame" value="ez2dj_7th"></div>
@@ -58,13 +58,18 @@ td,th{text-align:left;padding:9px 6px;border-bottom:1px solid #33485e}th{color:#
 <div><label for="splayer">Player ID</label><input required id="splayer" value="local_p1"></div>
 <div><label for="sscore">Score</label><input required id="sscore" type="number" min="0" max="1000000000" value="812345"></div>
 <div><label for="sclear">Clear type</label><select id="sclear"><option>unknown</option><option>failed</option><option selected>clear</option><option>full_combo</option><option>perfect</option></select></div>
-<div class="wide"><button type="submit">Submit local score</button><span id="scoreState" class="status" role="status"></span></div>
+<div class="wide"><label for="sid">Submission ID for retry safety (optional)</label><input id="sid" maxlength="96" placeholder="e.g. my-test-play-0001"></div>
+<div class="wide"><button type="submit">Submit unverified score</button><span id="scoreState" class="status" role="status"></span></div>
 </form>
 </section>
 <section class="card">
 <h2>Leaderboard</h2>
 <p class="muted small">Uses the same game/song/chart currently selected in the score form.</p>
+<label for="bestOnly">View</label>
+<select id="bestOnly"><option value="0">All local scores</option><option value="1" selected>Personal best per player</option></select>
 <button id="refreshBoard" class="alt">Refresh leaderboard</button>
+<button id="refreshStats" class="alt">Player stats</button>
+<div id="playerStats" class="status muted"></div>
 <div id="leaderboard" class="list" style="margin-top:14px">No results loaded</div>
 </section>
 <section class="card">
@@ -121,11 +126,18 @@ function addMessage(el,title,details){
 async function health(){const data=await api("GET","/health");message("health",data.name+" "+data.version+" — "+data.status,true)}
 function songFields(){return {game_id:value("sgame"),song_id:value("ssong"),chart_id:value("schart")}}
 async function board(){
-  const params=new URLSearchParams({...songFields(),limit:"20"});
+  const params=new URLSearchParams({...songFields(),limit:"20",best_only:value("bestOnly")});
   const result=await api("GET","/api/v1/leaderboard?"+params.toString());
   const el=$("leaderboard");clear(el);
   if(!result.entries.length){addMessage(el,"No scores","Submit a synthetic score to test locally.");return}
   result.entries.forEach((e,i)=>addMessage(el,"#"+(i+1)+" "+e.player_id,String(e.score)+" • "+e.clear_type+" • UNVERIFIED"));
+}
+async function stats(){
+ const params=new URLSearchParams({game_id:value("sgame"),player_id:value("splayer")});
+ const result=await api("GET","/api/v1/player-stats?"+params.toString());
+ $("playerStats").textContent="Plays: "+result.plays+" • Unique charts: "+
+   result.charts_played+" • Highest raw score: "+(result.highest_raw_score??"—")+
+   " • UNVERIFIED";
 }
 async function events(){
  const data=await api("GET","/api/v1/events");const el=$("events");clear(el);
@@ -135,11 +147,16 @@ async function events(){
 async function room(){const id=value("roomId");if(!id)throw new Error("Enter a room ID");const data=await api("GET","/api/v1/lobbies/"+encodeURIComponent(id));$("roomResult").textContent=JSON.stringify(data,null,2)}
 $("checkHealth").addEventListener("click",()=>act(health));
 $("refreshBoard").addEventListener("click",()=>act(board));
+$("bestOnly").addEventListener("change",()=>act(board));
+$("refreshStats").addEventListener("click",()=>act(stats));
 $("refreshEvents").addEventListener("click",()=>act(events));
 $("scoreForm").addEventListener("submit",e=>{e.preventDefault();act(async()=>{
- const data=await api("POST","/api/v1/scores",{...songFields(),player_id:value("splayer"),
- score:Number(value("sscore")),clear_type:value("sclear")});
- message("scoreState","Saved #"+data.id+" • unverified",true);await board();
+ const score={...songFields(),player_id:value("splayer"),
+ score:Number(value("sscore")),clear_type:value("sclear")};
+ if(value("sid"))score.submission_id=value("sid");
+ const data=await api("POST","/api/v1/scores",score);
+ message("scoreState",(data.duplicate?"Already saved ":"Saved #")+data.id+" • unverified",true);
+ await board();await stats();
 })});
 $("lobbyForm").addEventListener("submit",e=>{e.preventDefault();act(async()=>{
  const data=await api("POST","/api/v1/lobbies",{...songFields(),player_id:value("lplayer"),

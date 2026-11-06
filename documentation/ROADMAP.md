@@ -2,6 +2,24 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Current priority: modern compatibility and scoring
+
+**Decision (November 2026):** 2EZConfig_Re is a compatibility and player-services platform. The user-provided Final:EX research informs feasibility, but adding songs or AutoChart is not the product's main goal.
+
+| Priority | Deliverable | Status |
+| --- | --- | --- |
+| P0 | Read-only Compatibility Doctor for modern Windows and legacy 32-bit files | Implemented, hardware unverified |
+| P0 | Reliable local scores, personal bests and pseudonymous stats | Implemented, all scores unverified |
+| P1 | Verified Windows 10/11/XP compatibility profiles, display and audio diagnostics | Planned |
+| P1 | Result-finalized observation for exact tested game build | Planned |
+| P1 | Authenticated global rankings with chart rules, anti-replay and privacy controls | Planned |
+| P2 | Player progression, rivals, achievements and score seasons | Planned |
+| P2 | Offline-friendly cross-cabinet score challenges | Prototype rooms only |
+
+The arcade must run without an internet connection. The modern PC companion can support network services in future, but the current local score server is not a public ranked service.
+
+Read [Modernization Strategy](MODERNIZATION_STRATEGY.md), [Compatibility Doctor](COMPATIBILITY_DOCTOR.md) and [Global Rankings](GLOBAL_RANKINGS.md) before planning new features.
+
 ## Integrated foundation
 
 | Item | Implementation | Status |
@@ -23,7 +41,7 @@ Last reviewed: **2026-11-05**. The findings below are from source inspection plu
 | Profiles | Offline export/diff/explicit apply with backups | GUI manager, controller remapping, transactional multi-file restore |
 | Community | Security policy, changelog, issue/PR templates, developer tests and case-study docs | Compatibility reports from real XP cabinets and tested game builds |
 
-**Development branch:** [PR #5](https://github.com/ECas95/2EZConfig_Re/pull/5). This is an opt-in extension platform milestone; gameplay hooks beyond runtime.ready remain proposed. The companion is for a modern Python 3.10+ host, not the Windows XP game process.
+**Integrated in:** [PR #5](https://github.com/ECas95/2EZConfig_Re/pull/5). This is an opt-in extension platform milestone; gameplay hooks beyond runtime.ready remain proposed. The companion is for a modern Python 3.10+ host, not the Windows XP game process.
 
 **Use-case guides:** [new hooks](NEW_HOOKS.md), [event SDK](EXTENSION_EVENTS.md), [custom songs](CUSTOM_SONGS.md), [score API](SCORES_API.md), [multiplayer](MULTIPLAYER.md), [cabinet profiles](CABINET_PROFILES.md) and [developer verification](DEVELOPER_GUIDE.md).
 
