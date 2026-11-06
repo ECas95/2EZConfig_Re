@@ -33,7 +33,7 @@
 
 The main priority of **2EZConfig_Re** is to make existing EZ2 arcade games more reliable on modern Windows while preserving legacy cabinets, and to offer **opt-in player services** without modifying note judgement or the original song catalogue.
 
-**New working foundations:** an offline [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md), [idempotent local score submissions and personal-best leaderboards](documentation/GLOBAL_RANKINGS.md), and a browser dashboard that shows unverified scores and player statistics.
+**New working foundations:** an in-app Diagnostics **Check launcher files** action, an offline [Compatibility Doctor](documentation/COMPATIBILITY_DOCTOR.md), [idempotent local score submissions and personal-best leaderboards](documentation/GLOBAL_RANKINGS.md), and a browser dashboard that shows unverified scores and player statistics.
 
 **Planned, not yet delivered:** tested Windows 10/11 compatibility profiles, passive final-result capture, a secure global ranking service, account/player identities and verified score synchronization. External custom-song mods remain a separate optional interoperability track, not the core roadmap.
 
