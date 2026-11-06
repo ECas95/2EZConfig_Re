@@ -46,6 +46,12 @@ References:
 - Third-party legacy game / igc32.dll report: https://talontales.com/troubleshooting/client-crash-after-patch-with-igc32-dll-error/
 - Windows DirectDraw cooperative mode: https://learn.microsoft.com/en-us/windows/win32/api/ddraw/nf-ddraw-idirectdraw7-setcooperativelevel
 
+## Hybrid Intel/NVIDIA laptop identified
+
+The Windows adapter inventory now identifies Intel UHD Graphics (32.0.101.7088) and NVIDIA RTX 3050 6GB Laptop GPU (32.0.15.9191). Windows may route a laptop display through the integrated GPU even when the discrete GPU renders. Try a per-app GPU preference on the actual game EXE and compare exceptions; this does not guarantee D3D7 uses the requested GPU.
+
+The vendor-neutral Diagnostics shortcut and read-only GPU inventory are documented in [Cross-vendor GPU investigation](VENDOR_NEUTRAL_GPU.md).
+
 ## Optional local crash report generator
 
 From Windows PowerShell 5.1 or PowerShell 7, inside a local checkout of this repository:
