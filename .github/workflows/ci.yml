@@ -50,7 +50,7 @@ jobs:
       - name: Verify expected outputs
         shell: pwsh
         run: |
-          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll")) {
+          foreach ($path in @("build/release/bin/2EZConfig.exe", "build/release/bin/2EZ.dll", "build/release/bin/2EZWindowMode.exe")) {
             if (-not (Test-Path $path -PathType Leaf)) { throw "Missing output: $path" }
             $file = Get-Item $path
             if ($file.Length -eq 0) { throw "Empty output: $path" }
@@ -64,3 +64,4 @@ jobs:
           path: |
             build/release/bin/2EZ.dll
             build/release/bin/2EZConfig.exe
+            build/release/bin/2EZWindowMode.exe
