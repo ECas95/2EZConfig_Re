@@ -79,7 +79,7 @@ jobs:
           Un CreateDevice fallido NO demuestra que toda GPU sea incompatible.
           Consulta NATIVE_DX7_PROBE.md para interpretar HRESULT.
           No incluye juegos ni contenidos propietarios.
-                    '@ | Set-Content -Encoding utf8 'dist/LEEME.md'
+          '@ | Set-Content -Encoding utf8 'dist/LEEME.md'
           # Refuse any launcher DLL, game executable or graphics wrapper.
           foreach ($name in @('2EZ.dll','2EZConfig.exe','EZ2AC.exe','ddraw.dll','dxgi.dll','d3d9.dll','2EZWindowMode.exe')) {
             if (Test-Path "dist/$name") { throw "Unexpected runtime in diagnostic package: $name" }
