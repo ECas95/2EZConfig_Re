@@ -84,7 +84,7 @@ New product context: [Modernization Strategy](MODERNIZATION_STRATEGY.md), [Compa
 
 New **2EZWindowMode.exe** follows the game PID and restyles a top-level window only after injection and process resume; no new gameplay-memory hook is created. The default Native mode never launches the helper. Test Windowed, centered Borderless, Borderless Fullscreen and Ctrl+Alt+left-drag with a controlled synthetic Win32 app and real supported builds, especially when DirectDraw exclusive cooperative mode is active.
 
-DirectDraw4/7 display_refresh_hz can request 0 (game default), 60 or 120. The 120 path compares Windows primary-adapter mode enumeration and otherwise preserves the original rate. This is only display refresh, **not actual game FPS**. A 120-FPS gameplay unlock requires separate timing/judgement/audio/frame evidence and is explicitly outside the implemented patch.
+DirectDraw4/7 display_refresh_hz can request 0 (game default), 60 or 120. The 120 path compares Windows primary-adapter mode enumeration, retries the original refresh if the driver rejects 120, and otherwise preserves the original rate. This is only display refresh, **not actual game FPS**. A 120-FPS gameplay unlock requires separate timing/judgement/audio/frame evidence and is explicitly outside the implemented patch.
 
 Native POINT texture sampling remains separate from shaders; there is no built-in postprocess backend. See [Presentation Modes](PRESENTATION_MODES.md).
 
