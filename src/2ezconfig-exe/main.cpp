@@ -142,6 +142,7 @@ static void renderSettingsTab();
 static void gameCheckbox(const char* label, const char* key, bool defaultVal);
 static void renderButtonsTab();
 static void renderDiagnosticsTab();
+static void renderDisplayTab();
 static void renderAnalogsTab();
 static void renderAnalogEditPopup(const std::vector<Device>& axisDevices);
 static void renderLightsTab();
@@ -157,6 +158,7 @@ static void autoDetectGame();
 static std::string resolveActiveExeName();
 static std::vector<std::string> parseExtraDlls();
 static void launchGame();
+static void startWindowModeHelper(DWORD pid);
 static void cleanupUI();
 static int sixthBackgroundLoop(const char* launcherExe, const std::vector<std::string>& extraDlls);
 static void renderRemember1stPatches();
@@ -398,6 +400,11 @@ static void renderUI() {
 
         if (ImGui::BeginTabItem("Patches")) {
             renderPatchesTab();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Display")) {
+            renderDisplayTab();
             ImGui::EndTabItem();
         }
 
@@ -757,6 +764,114 @@ static void renderSettingsTab() {
         }
     }
 
+    ImGui::EndChild();
+}
+
+static void renderDisplayTab() {
+    ImGui::BeginChild("##displayOptions", ImVec2(0, 0), false);
+    auto& settings = g_app.settings.gameSettings();
+
+    ImGui::SeparatorText("Game window presentation (experimental)");
+    ImGui::TextWrapped("Native leaves the game unchanged. Other modes launch a separate "
+        "Win32 helper for the selected game PID, after injection. Some exclusive "
+        "DirectDraw/Direct3D titles may reject window restyling.");
+    static const char* modeLabels[] = {
+        "Original (game-controlled)",
+        "Windowed (resizable title bar)",
+        "Borderless (centered)",
+        "Borderless Fullscreen (monitor)",
+        "Draggable borderless (Ctrl+Alt+left-drag)"
+    };
+    static const char* modeIds[] = {
+        "native", "windowed", "borderless", "borderless_fullscreen", "draggable"
+    };
+    std::string selected = settings.value("presentation_mode", "native");
+    int selectedMode = 0;
+    for (int i = 0; i < 5; ++i) {
+        if (selected == modeIds[i]) selectedMode = i;
+    }
+    if (ImGui::Combo("Window mode", &selectedMode, modeLabels, 5)) {
+        settings["presentation_mode"] = modeIds[selectedMode];
+        g_app.settings.save();
+    }
+    if (selectedMode == 1 || selectedMode == 2 || selectedMode == 4) {
+        int width  = settings.value("presentation_width", 960);
+        int height = settings.value("presentation_height", 720);
+        if (ImGui::InputInt("Window width", &width, 32)) {
+            if (width >= 320 && width <= 3840) {
+                settings["presentation_width"] = width;
+                g_app.settings.save();
+            }
+        }
+        if (ImGui::InputInt("Window height", &height, 24)) {
+            if (height >= 240 && height <= 2160) {
+                settings["presentation_height"] = height;
+                g_app.settings.save();
+            }
+        }
+        ImGui::TextDisabled("For EZ2's 4:3 artwork, try 960x720 or 1280x960.");
+    }
+    if (selectedMode == 3) {
+        ImGui::TextDisabled("Borderless Fullscreen uses the selected window's monitor.");
+        ImGui::TextWrapped("A renderer/wrapper must preserve the original 4:3 picture; "
+            "this helper only changes the Win32 window rectangle and style.");
+    }
+    if (selectedMode == 4) {
+        ImGui::TextDisabled("Hold Ctrl+Alt+left mouse button over the game to reposition.");
+    }
+    if (selectedMode != 0) {
+        ImGui::TextWrapped("This affects OS window style only. It cannot defeat "
+            "an exclusive DirectDraw cooperative level or change internal game FPS.");
+        ImGui::TextDisabled("Requires 2EZWindowMode.exe next to 2EZConfig.exe.");
+        if (std::filesystem::exists("2EZWindowMode.exe")) {
+            ImGui::TextColored(ImVec4(0.55f, 0.85f, 0.65f, 1.0f),
+                               "[OK] Presentation helper found.");
+        } else {
+            ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+                               "[MISSING] Presentation helper not installed.");
+        }
+    }
+
+    ImGui::SeparatorText("Display refresh request");
+    const std::string gameId = g_app.gameId();
+    const bool ddraw4 = hasDDraw4Fixes(gameId);
+    const bool ddraw7 = hasDDraw7Fixes(gameId);
+    if (ddraw4 || ddraw7) {
+        const char* oldKey = ddraw4 ? "ddraw4_force_60hz" : "force_60hz";
+        int desired = settings.value("display_refresh_hz", 0);
+        if (desired != 60 && desired != 120) desired = 0;
+        if (!desired && settings.value(oldKey, false)) desired = 60;
+        int choice = desired == 120 ? 2 : desired == 60 ? 1 : 0;
+        static const char* names[] = {
+            "Game default", "60 Hz display request", "120 Hz display request (experimental)"
+        };
+        if (ImGui::Combo("Display refresh", &choice, names, 3)) {
+            settings["display_refresh_hz"] = choice == 1 ? 60 : choice == 2 ? 120 : 0;
+            // Retire the legacy 60 Hz toggle when choosing a new explicit mode.
+            settings.erase(oldKey);
+            g_app.settings.save();
+        }
+        ImGui::TextWrapped("120 Hz is a monitor mode request, not 120 game FPS. "
+            "If the requested 120 Hz resolution/color mode is not enumerated, "
+            "the game request is left unchanged.");
+    } else {
+        ImGui::TextDisabled("No DirectDraw refresh hook is available for this game entry.");
+    }
+
+    ImGui::SeparatorText("Scaling and image filtering");
+    if (ddraw4 || ddraw7) {
+        const char* filterKey = ddraw4 ? "ddraw4_point_filtering" : "point_filtering";
+        bool sharp = settings.value(filterKey, false);
+        if (ImGui::Checkbox("Pixel-sharp texture sampling (POINT)", &sharp)) {
+            settings[filterKey] = sharp;
+            g_app.settings.save();
+        }
+        ImGui::TextDisabled("POINT is built in; it is not a post-processing shader/upscaler.");
+    }
+    ImGui::TextWrapped("GLSL shaders, CRT effects, FSR and xBRZ require a separately "
+        "validated presentation backend. No third-party wrapper is installed "
+        "or changed by 2EZConfig_Re.");
+    ImGui::TextDisabled("See documentation/PRESENTATION_MODES.md for renderer compatibility.");
     ImGui::EndChild();
 }
 
@@ -1485,6 +1600,47 @@ static std::vector<std::string> parseExtraDlls() {
     return dlls;
 }
 
+static void startWindowModeHelper(DWORD pid) {
+    if (!pid) return;
+    const auto& gs = g_app.settings.gameSettings();
+    const std::string mode = gs.value("presentation_mode", "native");
+    if (mode == "native") return;
+    if (mode != "windowed" && mode != "borderless" &&
+        mode != "borderless_fullscreen" && mode != "draggable") return;
+    int width = gs.value("presentation_width", 960);
+    int height = gs.value("presentation_height", 720);
+    if (width < 320 || width > 3840) width = 960;
+    if (height < 240 || height > 2160) height = 720;
+
+    char modulePath[MAX_PATH] = {};
+    DWORD length = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+    if (!length || length >= MAX_PATH) return;
+    std::filesystem::path folder = std::filesystem::path(modulePath).parent_path();
+    const std::string helper = (folder / "2EZWindowMode.exe").string();
+    if (!std::filesystem::is_regular_file(helper)) {
+        MessageBoxA(nullptr, "2EZWindowMode.exe is missing. Game will run natively.",
+                    "2EZConfig Video", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    std::string command = "\"" + helper + "\" --pid " + std::to_string(pid) +
+                          " --mode " + mode + " --width " + std::to_string(width) +
+                          " --height " + std::to_string(height);
+    std::vector<char> mutableCmd(command.begin(), command.end());
+    mutableCmd.push_back('\0');
+    STARTUPINFOA start = {};
+    start.cb = sizeof(start);
+    PROCESS_INFORMATION child = {};
+    if (CreateProcessA(helper.c_str(), mutableCmd.data(), nullptr, nullptr, FALSE,
+                       0, nullptr, folder.string().c_str(), &start, &child)) {
+        CloseHandle(child.hThread);
+        CloseHandle(child.hProcess);
+    } else {
+        MessageBoxA(nullptr, "Could not start the window presentation helper. "
+                    "The game will continue using its original window mode.",
+                    "2EZConfig Video", MB_OK | MB_ICONWARNING);
+    }
+}
+
 static void launchGame() {
     std::string exe = resolveActiveExeName();
     auto extraDlls = parseExtraDlls();
@@ -1494,7 +1650,10 @@ static void launchGame() {
         s_sixthLauncherExe = exe;
         s_sixthExtraDlls = extraDlls;
     } else {
-        Injector::LaunchAndInject(exe.c_str(), extraDlls);
+        DWORD pid = 0;
+        if (Injector::LaunchAndInject(exe.c_str(), extraDlls, &pid)) {
+            startWindowModeHelper(pid);
+        }
     }
 }
 
