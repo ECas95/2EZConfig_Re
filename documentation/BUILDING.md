@@ -46,7 +46,7 @@ Dependencies are pinned to specific revisions, but the build still fetches sourc
 
 The Windows Release build still compiles **build/release/bin/2EZWindowMode.exe** for isolated development tests, but the launcher does not start it on any unverified legacy game. The helper is **withheld from downloadable release packages** after a real Final:EX Windowed crash report. The package contains only 2EZConfig.exe and 2EZ.dll plus license files/checksums.
 
-CI checks that all three binaries exist, runs CTest for the read-only refresh guard and executes a safe invalid-command-line smoke test of the helper. Release packaging includes the helper and its SHA-256 alongside 2EZConfig.exe and 2EZ.dll. Tests on real game windows, DirectDraw exclusive mode and 120 Hz monitors are still manual acceptance tasks.
+CI checks that all three binaries exist, runs CTest for the read-only refresh guard and executes a safe invalid-command-line smoke test of the helper. Release packaging intentionally **excludes** the unsafe helper; CI can still build and test it in isolation. Tests on real game windows, DirectDraw exclusive mode and 120 Hz monitors are still manual acceptance tasks.
 
 ## Continuous integration
 
