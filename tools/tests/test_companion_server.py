@@ -81,6 +81,65 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(self.call("/api/v1/leaderboard?limit=wat")[0], 400)
         self.assertEqual(self.call("/api/v1/leaderboard?game_id=x&song_id=y&chart_id=z&limit=101")[0], 400)
 
+    def test_idempotent_score_submission_and_conflict(self):
+        score = {"game_id": "ez2ac_fn_ex", "song_id": "original_01",
+                 "chart_id": "5k_hd", "player_id": "cabinet_A",
+                 "score": 999000, "clear_type": "clear", "submission_id": "session_001"}
+        first_status, first = self.call("/api/v1/scores", score)
+        self.assertEqual(first_status, 201)
+        self.assertFalse(first["duplicate"])
+        _, duplicate = self.call("/api/v1/scores", score)
+        self.assertTrue(duplicate["duplicate"])
+        self.assertEqual(first["id"], duplicate["id"])
+        score["score"] = 888000
+        self.assertEqual(self.call("/api/v1/scores", score)[0], 400)
+        _, board = self.call("/api/v1/leaderboard?game_id=ez2ac_fn_ex&song_id=original_01&chart_id=5k_hd")
+        self.assertEqual(len(board["entries"]), 1)
+        # The same DB can be opened again after a restart; idempotency survives.
+        other = CompanionState(str(Path(self.tmp.name) / "scores.sqlite3"))
+        score["score"] = 999000
+        self.assertTrue(other.add_score(score)["duplicate"])
+
+    def test_best_only_and_local_player_stats(self):
+        endpoint = "/api/v1/scores"
+        common = {"game_id": "ez2ac_fn_ex", "song_id": "song_01",
+                  "chart_id": "5k_hd", "clear_type": "clear"}
+        for player, points in [("p1", 100), ("p1", 900), ("p2", 700)]:
+            _, reply = self.call(endpoint, {**common, "player_id": player, "score": points})
+            self.assertFalse(reply["verified"])
+        self.call(endpoint, {**common, "song_id": "song_02", "chart_id": "7k_hd",
+                             "player_id": "p1", "score": 500})
+        path = "/api/v1/leaderboard?game_id=ez2ac_fn_ex&song_id=song_01&chart_id=5k_hd"
+        self.assertEqual(len(self.call(path)[1]["entries"]), 3)
+        _, result = self.call(path + "&best_only=1")
+        self.assertTrue(result["best_only"])
+        self.assertEqual([(x["player_id"], x["score"]) for x in result["entries"]],
+                         [("p1", 900), ("p2", 700)])
+        self.assertFalse(result["verified"])
+        self.assertEqual(self.call(path + "&best_only=maybe")[0], 400)
+        _, stats = self.call("/api/v1/player-stats?game_id=ez2ac_fn_ex&player_id=p1")
+        self.assertEqual(stats["plays"], 3)
+        self.assertEqual(stats["charts_played"], 2)
+        self.assertEqual(stats["highest_raw_score"], 900)
+        self.assertFalse(stats["verified"])
+
+    def test_prevent_synthetic_or_client_verified_score_claims(self):
+        score = {"game_id": "ez2ac_fn_ex", "song_id": "song_01",
+                 "chart_id": "hd", "player_id": "p1", "score": 1234}
+        self.assertEqual(self.call("/api/v1/scores", {**score, "synthetic": True})[0], 400)
+        self.assertEqual(self.call("/api/v1/scores", {**score, "verified": True})[0], 400)
+
+    def test_concurrent_same_submission_only_inserts_once(self):
+        from concurrent.futures import ThreadPoolExecutor
+        payload = {"game_id": "ez2ac_fn_ex", "song_id": "song_01",
+                   "chart_id": "hd", "player_id": "p1", "score": 1234,
+                   "submission_id": "race-test-001"}
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            outcomes = list(pool.map(lambda _: self.call("/api/v1/scores", payload), range(6)))
+        self.assertTrue(all(status == 201 for status, _ in outcomes))
+        self.assertEqual(sum(not item["duplicate"] for _, item in outcomes), 1)
+        self.assertEqual(len({item["id"] for _, item in outcomes}), 1)
+
     def test_lobby_ready_start_finish(self):
         _, room = self.call("/api/v1/lobbies", {
             "game_id": "ez2dj_7th", "song_id": "own_song_001", "chart_id": "5k_hd",
