@@ -149,7 +149,7 @@ Si `game-settings.json` o `global-settings.json` están dañados, la nueva imple
 En **Display → Native DirectX** puedes probar el motor DirectX 7 original *sin los hooks gráficos DirectDraw de 2EZ*, manteniendo el soporte de IO y otras funciones. No utiliza dgVoodoo, pero tampoco convierte Direct3D7 a OpenGL ni garantiza ventana. [Diagnóstico y procedimiento de recuperación](documentation/NATIVE_DIRECTX_RECOVERY.md).
 
 
-La nueva pestaña **Display** permite elegir Original, **Windowed**, **Borderless**, **Borderless Fullscreen** y **Draggable** (manteniendo Ctrl+Alt mientras arrastras con el mouse). Los modos adicionales usan un pequeño ejecutable auxiliar y son **optativos**: algunos juegos exclusivos DirectDraw pueden ignorarlos.
+La pestaña **Display** conserva esas opciones como referencia, pero solo **Original** está habilitado para versiones no certificadas. El ejecutable auxiliar de Windowed/Borderless no se inicia automáticamente mientras no exista una implementación nativa segura. Esto evita repetir el cierre observado.
 
 Ahora es posible solicitar **60 Hz o 120 Hz** en los títulos con soporte DirectDraw4/7. El ajuste 120 Hz es experimental y solo se intenta cuando Windows anuncia ese modo de pantalla. **120 Hz de monitor no significa 120 FPS reales**; los tiempos internos del juego y el scoring no se modifican.
 
