@@ -2,6 +2,14 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — display presentation modes
+
+- Added an optional, standalone x86 Win32 window helper with Windowed, Borderless, Borderless Fullscreen and Ctrl+Alt draggable styles; Native default untouched.
+- Added a Display tab with per-game presentation size, experimental 60/120 Hz DirectDraw4/7 refresh requests and existing POINT texture sampling.
+- Guarded 120 Hz request with exact primary-display mode enumeration and fallback to the game request.
+- Build, CI and release packaging include 2EZWindowMode.exe.
+- Documented external shader/upscaler research, exclusive-mode limitations, 4:3 risks and CRT restrictions. No actual 120-FPS unlock or native shader engine.
+
 ## Unreleased — compatibility and score reliability
 
 - Product roadmap reprioritized around modern Windows interoperability, cabinet reliability and optional global player services instead of new song loaders.
