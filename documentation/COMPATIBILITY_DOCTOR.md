@@ -2,6 +2,12 @@
 
 **Implemented:** a read-only Python 3.10+ report for a user-owned game folder. The tool does not inject DLLs, launch games, change Windows settings, patch executables, read graphics/audio device serials or test arcade hardware.
 
+## Inside the configurator
+
+The existing **Diagnostics** tab now includes an explicit **Check launcher files** action. It reports whether the currently selected executable and 2EZ.dll exist beside the launcher, and shows caution notes when WASAPI or 60 Hz options are enabled. The file checks are deliberately **button-triggered**, not continuously performed during the ImGui render loop.
+
+This built-in check is useful even on old Windows cabinets and does not depend on Python. It does not inspect PE headers, load binaries, verify signatures or prove graphics/audio compatibility; the standalone Compatibility Doctor below provides additional offline analysis.
+
 ## Start with diagnostics
 
 ~~~powershell
