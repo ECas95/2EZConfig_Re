@@ -176,6 +176,10 @@ python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log"
 
 The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
 
+## Isolated native DirectDraw7 and Direct3D7 probe
+
+The new 32-bit 2EZDx7Probe.exe checks the actual Windows system DirectDraw7 runtime without starting the game, injecting hooks, applying graphics wrappers or changing display modes. Optional --deep enumerates D3D7 devices in the standalone process. Results help isolate OS versus game startup failures, **not certify the actual game**. [DX7 probe guide](documentation/NATIVE_DX7_PROBE.md).
+
 ## Vendor-neutral graphics diagnostics
 
 2EZConfig_Re should not depend on Intel, NVIDIA or AMD graphics. The Diagnostics tab now links to Windows per-application graphics preferences and provides a separate read-only GPU inventory script. Neither forces GPU selection nor asserts that a legacy DDraw7 game used a particular adapter.
