@@ -761,13 +761,55 @@ static void renderSettingsTab() {
 }
 
 static void renderDiagnosticsTab() {
+    // Explicit opt-in refresh avoids filesystem probing every ImGui frame.
+    static bool checked = false;
+    static bool gameExists = false, dllExists = false;
+    static std::string checkedExe;
+    const std::string activeExe = resolveActiveExeName();
+    ImGui::SeparatorText("Compatibility readiness (read-only)");
+    ImGui::Text("Selected game: %s", g_app.gameName());
+    ImGui::Text("Executable: %s", activeExe.c_str());
+    if (ImGui::Button("Check launcher files") || (checked && activeExe != checkedExe)) {
+        char modulePath[MAX_PATH] = {};
+        DWORD length = GetModuleFileNameA(NULL, modulePath, MAX_PATH);
+        if (length > 0 && length < MAX_PATH) {
+            std::filesystem::path launcherDir = std::filesystem::path(modulePath).parent_path();
+            std::error_code error;
+            gameExists = std::filesystem::is_regular_file(launcherDir / activeExe, error);
+            error.clear();
+            dllExists = std::filesystem::is_regular_file(launcherDir / "2EZ.dll", error);
+            checkedExe = activeExe;
+            checked = true;
+        }
+    }
+    if (checked) {
+        const ImVec4 ok(0.55f, 0.85f, 0.65f, 1.0f);
+        const ImVec4 warn(1.0f, 0.69f, 0.3f, 1.0f);
+        ImGui::TextColored(gameExists ? ok : warn, "%s Game executable",
+                           gameExists ? "[OK]" : "[MISSING]");
+        ImGui::SameLine();
+        ImGui::TextColored(dllExists ? ok : warn, "%s 2EZ.dll",
+                           dllExists ? "[OK]" : "[MISSING]");
+    } else {
+        ImGui::TextDisabled("Use Check launcher files for a local file readiness check.");
+    }
+    if (g_app.settings.gameSettings().value("hypersonik", false) ||
+        g_app.settings.gameSettings().value("audio_eq", false)) {
+        ImGui::TextDisabled("WASAPI audio enabled: requires Vista+ and compatible device.");
+    }
+    if (g_app.settings.gameSettings().value("force_60hz", false) ||
+        g_app.settings.gameSettings().value("ddraw4_force_60hz", false)) {
+        ImGui::TextDisabled("60 Hz override: check monitor and CRT signal safety.");
+    }
+    ImGui::TextDisabled("For x86 PE validation and OS hints: tools/compatibility_doctor.py");
+    ImGui::Separator();
     ImGui::TextDisabled("Live HID monitor - read-only. Use Lights to test output ports.");
     ImGui::TextWrapped("Device values refresh while this tab is open. "
                        "Some vendor-specific or older IO interfaces may not expose HID states.");
     const auto devices = g_app.input->getDevices();
     ImGui::Text("Detected input devices: %d", static_cast<int>(devices.size()));
     ImGui::Separator();
-    ImGui::BeginChild("##diagnosticsScroll", ImVec2(0, ImGui::GetWindowHeight() - 120), false);
+    ImGui::BeginChild("##diagnosticsScroll", ImVec2(0, 0), false);
     for (const auto& device : devices) {
         ImGui::PushID(device.path.c_str());
         if (ImGui::TreeNode(device.name.c_str())) {
