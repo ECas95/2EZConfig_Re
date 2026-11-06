@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from adapter_compatibility import inspect_compatibility, validate_manifest
 from gds_inspector import inspect_gds_file, inspect_gds_text
+from gds_visualizer import render_svg, main as visualizer_main
 from ranking_inspector import inspect_rank_bytes, inspect_rank_file
 
 
@@ -59,6 +60,21 @@ class GdsInspectorTests(unittest.TestCase):
             inspect_gds_text(GDS_SAMPLE.replace("Key=15,16", "Key=-2,16"))
         with self.assertRaisesRegex(ValueError, "No \\[SlotN\\]"):
             inspect_gds_text("[General]\nNumberOfSlot=2\n")
+
+    def test_static_svg_lane_map(self):
+        import xml.etree.ElementTree as ET
+        mapping = inspect_gds_text(GDS_SAMPLE)
+        svg = render_svg(mapping)
+        self.assertIn("lane 0: Track8", svg)
+        self.assertIn("keys [15, 16]", svg)
+        ET.fromstring(svg)
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "sample.gds"
+            dst = Path(tmp) / "lanes.svg"
+            src.write_text(GDS_SAMPLE)
+            self.assertEqual(visualizer_main([str(src), "--output", str(dst)]), 0)
+            self.assertTrue(dst.is_file())
+            self.assertEqual(visualizer_main([str(src), "--output", str(dst)]), 1)
 
     def test_file_read_and_nonutf8(self):
         with tempfile.TemporaryDirectory() as tmp:
