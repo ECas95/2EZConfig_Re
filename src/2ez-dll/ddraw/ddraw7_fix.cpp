@@ -146,7 +146,12 @@ static HRESULT STDMETHODCALLTYPE Hooked_SetDisplayMode(IDirectDraw7* self, DWORD
         !ez2DisplayModeSupportsRefresh(width, height, newBpp, newRefresh)) {
         newRefresh = refreshRate;
     }
-    return g_origSetDisplayMode(self, width, height, newBpp, newRefresh, flags);
+    HRESULT result = g_origSetDisplayMode(self, width, height, newBpp, newRefresh, flags);
+    if (FAILED(result) && newRefresh == 120 && refreshRate != 120) {
+        Logger::warn("[DDraw7Fix] 120 Hz display mode rejected; retrying original refresh.");
+        return g_origSetDisplayMode(self, width, height, newBpp, refreshRate, flags);
+    }
+    return result;
 }
 
 // IAT hook: DirectDrawCreateEx — entry point for all hooks
