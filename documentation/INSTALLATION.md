@@ -26,7 +26,7 @@ The bundled patch file is refreshed when its embedded `ver` is higher. Edit `use
 
 ## Optional video presentation (new)
 
-The release now contains **2EZWindowMode.exe**, an XP-targeted x86 helper beside 2EZConfig.exe and 2EZ.dll. It only runs if the user explicitly selects a non-native Window mode in the new **Display** tab. It controls the *top-level Win32 window* after game launch; it cannot convert exclusive DirectDraw surfaces to a functioning windowed renderer by itself.
+**Safety change:** releases now distribute 2EZConfig.exe and 2EZ.dll only. The experimental 2EZWindowMode.exe helper remains in the source tree but is withheld from packages after an actual Final:EX Windowed crash report. The launcher refuses to run it for any unverified game build, even if an older version left a non-native presentation mode saved. The option Native DirectX in the Display tab can skip 2EZ's DirectDraw/Direct3D detours for debugging without installing dgVoodoo.
 
 The Display tab also supports an optional **60 Hz or guarded 120 Hz display request** on titles with the supported DirectDraw4/7 hook, plus existing POINT sampling for sharp pixels. This is not a 120-FPS engine patch or built-in shader framework.
 
