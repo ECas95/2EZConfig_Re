@@ -144,6 +144,11 @@ Si `game-settings.json` o `global-settings.json` están dañados, la nueva imple
 
 ## Modos de pantalla, escalado y 60/120 Hz
 
+**Corrección de seguridad:** una prueba real de Final:EX produjo un cierre inesperado en Windowed. Hemos bloqueado Windowed, Borderless y Draggable hasta demostrar compatibilidad real con el renderer nativo. Las opciones antiguas guardadas se ignoran automáticamente al arrancar.
+
+En **Display → Native DirectX** puedes probar el motor DirectX 7 original *sin los hooks gráficos DirectDraw de 2EZ*, manteniendo el soporte de IO y otras funciones. No utiliza dgVoodoo, pero tampoco convierte Direct3D7 a OpenGL ni garantiza ventana. [Diagnóstico y procedimiento de recuperación](documentation/NATIVE_DIRECTX_RECOVERY.md).
+
+
 La nueva pestaña **Display** permite elegir Original, **Windowed**, **Borderless**, **Borderless Fullscreen** y **Draggable** (manteniendo Ctrl+Alt mientras arrastras con el mouse). Los modos adicionales usan un pequeño ejecutable auxiliar y son **optativos**: algunos juegos exclusivos DirectDraw pueden ignorarlos.
 
 Ahora es posible solicitar **60 Hz o 120 Hz** en los títulos con soporte DirectDraw4/7. El ajuste 120 Hz es experimental y solo se intenta cuando Windows anuncia ese modo de pantalla. **120 Hz de monitor no significa 120 FPS reales**; los tiempos internos del juego y el scoring no se modifican.
