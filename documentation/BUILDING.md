@@ -46,7 +46,7 @@ Dependencies are pinned to specific revisions, but the build still fetches sourc
 
 The Windows Release build now also produces **build/release/bin/2EZWindowMode.exe**, a separate 32-bit GUI process built with the same XP-targeted MinGW toolchain. It is required only for optional non-native window styles, and does not add runtime dependencies to the injected 2EZ.dll.
 
-CI checks that all three binaries exist and executes a safe invalid-command-line smoke test of the helper. Release packaging includes the helper and its SHA-256 alongside 2EZConfig.exe and 2EZ.dll. Tests on real game windows, DirectDraw exclusive mode and 120 Hz monitors are still manual acceptance tasks.
+CI checks that all three binaries exist, runs CTest for the read-only refresh guard and executes a safe invalid-command-line smoke test of the helper. Release packaging includes the helper and its SHA-256 alongside 2EZConfig.exe and 2EZ.dll. Tests on real game windows, DirectDraw exclusive mode and 120 Hz monitors are still manual acceptance tasks.
 
 ## Continuous integration
 
