@@ -114,7 +114,7 @@ class AdapterCompatibilityTests(unittest.TestCase):
             executable.write_bytes(b"synthetic executable bytes")
             digest = hashlib.sha256(executable.read_bytes()).hexdigest()
             manifest = {"schema_version": 1, "adapters": [
-                {"adapter_id": "test_adaptor", "game_id": "ez2ac_finalex",
+                {"adapter_id": "test_adaptor", "game_id": "ez2ac_fn_ex",
                  "fingerprint_type": "on_disk_file", "exe_sha256": digest,
                  "capabilities": ["song.selected"], "validation_status": "research"}
             ]}
@@ -128,7 +128,7 @@ class AdapterCompatibilityTests(unittest.TestCase):
 
     def test_rejects_unpacked_fingerprint_and_invalid_caps(self):
         base = {"schema_version": 1, "adapters": [
-            {"adapter_id": "test", "game_id": "ez2ac_finalex",
+            {"adapter_id": "test", "game_id": "ez2ac_fn_ex",
              "fingerprint_type": "runtime_unpacked",
              "exe_sha256": "a" * 64, "capabilities": []}
         ]}
