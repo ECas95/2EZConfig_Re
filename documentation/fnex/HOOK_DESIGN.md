@@ -51,6 +51,10 @@ Game initialization
 | Result/rank | Result director and local top-five/top-99 files | Read-only preview can work now; real score hook should occur before/after a documented finalization state |
 | Two-player | Existing local two-player results/ranking branches | Start with asynchronous score matches; no evidence of native online synchronization |
 
+## Offline event contract rehearsal (available)
+
+The new [passive observatory](PASSIVE_OBSERVATORY.md) includes a Python state machine for artificial game observations. Only a confirmed song emits song.selected; previews do not. A result.finalized observation for each player slot emits a single score.observed; stage.ended emits session.ended. All generated records are explicitly synthetic/unverified and compatible with the local event viewer. **This is not a runtime hook** and cannot validate addresses, control flow, game scores or competitive results.
+
 ## Hook A — observe song selection
 
 **Purpose:** publish one low-frequency event after the selected song and chart become committed, not on every cursor movement.
