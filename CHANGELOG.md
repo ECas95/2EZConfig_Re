@@ -2,6 +2,12 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — isolated D3D7 render device creation tests
+
+- Added optional --device-hal and --device-rgb modes to the standalone native DirectDraw7 probe, with temporary 128x128 render target surfaces and CreateDevice HRESULT diagnostics.
+- Device modes report read_only=false because they allocate transient graphics memory; no game hooks, wrappers, display changes or persistent writes.
+- Existing basic/deep outputs and CI no-driver self-test remain available.
+
 ## Unreleased — native DirectDraw7 diagnostics
 
 - Added an isolated x86 DirectDraw7/Direct3D7 system capability probe with no game injection or graphics wrappers.

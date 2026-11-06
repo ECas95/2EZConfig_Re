@@ -79,6 +79,8 @@ jobs:
           $report = & ./build/release/bin/2EZDx7Probe.exe --self-test | ConvertFrom-Json
           if (-not $report.read_only -or $report.injects_game -or $report.modifies_display_mode) { throw 'Unsafe probe flags' }
           if (-not $report.self_test -or $report.game_compatibility_verified) { throw 'Unexpected test claim' }
+          if ($report.render_device_test_requested -or $report.render_surface_created -or $report.d3d7_render_device_created) { throw 'Self-test must not allocate any render surface' }
+          if (-not $report.no_persistent_changes -or $report.render_device_kind -ne 'none') { throw 'Incorrect safe probe self-test state' }
           $probe = (Resolve-Path './build/release/bin/2EZDx7Probe.exe').Path
           $proc = Start-Process -FilePath $probe -ArgumentList '--invalid' -Wait -PassThru -RedirectStandardError "$env:RUNNER_TEMP\dx7-invalid-stderr.txt"
           if ($proc.ExitCode -ne 2) { throw "Invalid probe invocation should return status 2, got $($proc.ExitCode)" }

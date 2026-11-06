@@ -2,6 +2,10 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Validation of Direct3D7 device creation
+
+User-supplied basic/deep JSON confirm native DirectDraw7 creation, DDSCL_NORMAL, IDirect3D7 access and enumeration of **3 legacy device types** on a 1920x1080, 32bpp, 144Hz display. Enumeration **does not create a render device**. The new opt-in --device-hal/--device-rgb tests allocate a temporary 128x128 offscreen 3D surface and call IDirect3D7::CreateDevice in a separate diagnostic process; no game hooks or wrappers. An actual scene, exclusive mode and Final:EX gameplay remain unverified. [Test procedure](NATIVE_DX7_PROBE.md).
+
 ## Native DirectDraw7 driver isolation
 
 With Final:EX still crashing at igc32.dll, the next diagnostic is the independent, XP-compatible system DirectDraw7/Direct3D7 probe. Its basic mode checks native DirectDraw creation and NORMAL cooperative level; its optional deep mode enumerates D3D7 devices. It never loads 2EZ, modifies the game or runs an API wrapper. A successful isolated test is **not** proof of Final:EX gameplay support.
