@@ -15,6 +15,7 @@
 #include "patch_store.h"
 #include "settings.h"
 #include "game_defs.h"
+#include "startup_diagnostic_policy.h"
 #include "logger.h"
 #include "utils.h"
 
@@ -46,6 +47,11 @@ static SettingsManager* s_settings = nullptr;
 static std::string s_currDirectory;
 static std::string s_gameId;
 static GameFamily s_gameFamily;
+
+static std::string startupMode() {
+    return s_settings ? s_settings->gameSettings().value("startup_diagnostics_mode", "normal")
+                      : "normal";
+}
 
 static void suspendOtherThreads(std::vector<HANDLE>& out) {
     DWORD myTid = GetCurrentThreadId();
@@ -87,6 +93,9 @@ static DWORD WINAPI InitThread(void*) {
         return 0;
     }
 
+    const std::string mode = startupMode();
+    Logger::info(std::string("[Startup] InitThread begin; mode=") +
+                 (StartupDiagnosticPolicy::minimal(mode) ? "minimal" : "normal"));
     ExtensionEvents::configure(s_currDirectory, s_gameId,
         s_settings->gameSettings().value("extension_events_enabled", false));
 
@@ -103,7 +112,8 @@ static DWORD WINAPI InitThread(void*) {
         Logger::error("[-] Bindings failed to load");
     }
 
-    //Initialise the appropriate IO handler based on game family
+    // Required IO is deliberately NOT bypassed in minimal diagnostic mode.
+    Logger::info("[Startup] IO init begin");
     switch (s_gameFamily) {
         case GameFamily::EZ2DJ:
             EZ2DJIO::initialiseIO(&s_bindings, s_input, s_settings);
@@ -116,21 +126,42 @@ static DWORD WINAPI InitThread(void*) {
             break;
     }
     
-    //Apply patches that need to be run after decryption is finished.
+    Logger::info("[Startup] IO init end");
+
+    // Apply patches that need to be run after decryption is finished.
     // 10ms seems to work reliably.
     Sleep(s_settings->globalSettings().value("shim_delay", 10));
-    s_settings->patchStore().applyEarlyPatches(s_gameId);
+    if (StartupDiagnosticPolicy::earlyPatchesEnabled(mode)) {
+        Logger::info("[Startup] Early patch pass begin");
+        s_settings->patchStore().applyEarlyPatches(s_gameId);
+        Logger::info("[Startup] Early patch pass end");
+    } else {
+        Logger::info("[Startup] Early patch pass SKIPPED (minimal diagnostic)");
+    }
     
 
 
     //Apply non critical patches that rely on game state being established. Apply last.
     Sleep(s_settings->globalSettings().value("patch_delay_ms", 2000));
-    if(s_gameFamily == GameFamily::EZ2DJ || s_gameFamily == GameFamily::EZ2Dancer){
-        s_settings->patchStore().applyVersionPatch("2EZConfig V2.0");
+    if (s_gameFamily == GameFamily::EZ2DJ || s_gameFamily == GameFamily::EZ2Dancer) {
+        if (StartupDiagnosticPolicy::versionPatchEnabled(mode)) {
+            Logger::info("[Startup] Version string patch begin");
+            s_settings->patchStore().applyVersionPatch("2EZConfig V2.0");
+            Logger::info("[Startup] Version string patch end");
+        } else {
+            Logger::info("[Startup] Version string patch SKIPPED (minimal diagnostic)");
+        }
     }
-    
-    s_settings->patchStore().applyPatches(s_gameId);
 
+    if (StartupDiagnosticPolicy::normalPatchesEnabled(mode)) {
+        Logger::info("[Startup] Normal patch pass begin");
+        s_settings->patchStore().applyPatches(s_gameId);
+        Logger::info("[Startup] Normal patch pass end");
+    } else {
+        Logger::info("[Startup] Normal patch pass SKIPPED (minimal diagnostic)");
+    }
+
+    Logger::info("[Startup] InitThread done");
     // Lifecycle signal only. Score and song hooks require per-title adapters.
     ExtensionEvents::publish("runtime.ready", "{\"stage\":\"post_patches\"}");
     return 0;
@@ -178,20 +209,31 @@ static void earlyInit() {
         return;
     }
 
+    const std::string mode = startupMode();
+    Logger::info("[Startup] earlyInit begin");
+    Logger::info("[Startup] Super-early patch pass begin (required)");
     applySuperEarlyPatches();
+    Logger::info("[Startup] Super-early patch pass end");
 
-    if (s_settings->gameSettings().value("hypersonik", false)) {
+    if (StartupDiagnosticPolicy::optionalAudioEnabled(mode) &&
+        s_settings->gameSettings().value("hypersonik", false)) {
         Hypersonik::install();
         Hypersonik::setMasterVolume(s_settings->gameSettings().value("hypersonik_volume", 75));
     }
 
+    if (!StartupDiagnosticPolicy::optionalAudioEnabled(mode)) {
+        Logger::info("[Startup] Hypersonik and AudioEQ skipped (minimal diagnostic)");
+    }
     GameFamily family = familyFromGameId(s_gameId);
+    Logger::info("[Startup] Required game IO/hardlock hooks begin");
     switch (family) {
         case GameFamily::EZ2DJ:
             resolveRemember1st();
             initHardlock();
             EZ2DJIO::installHooks(s_settings);
-            AudioEQ::install(s_settings);
+            if (StartupDiagnosticPolicy::optionalAudioEnabled(mode)) {
+                AudioEQ::install(s_settings);
+            }
             if (s_settings->gameSettings().value("native_graphics_mode", false)) {
                 Logger::info("[Display] Native DirectX diagnostic: 2EZ DDraw4/7 graphics hooks disabled.");
             } else if (s_gameId == "ez2dj_1st_se" || s_gameId == "rmbr_1st") {
@@ -214,6 +256,7 @@ static void earlyInit() {
             SabinIO::installHooks();
             break;
     }
+    Logger::info("[Startup] earlyInit complete; IO/hardlock retained");
 }
 
 static void loadSettings(HMODULE hModule) {
@@ -268,8 +311,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
         loadSettings(hModule);
         initLogger();
+        Logger::info("[Startup] hooks_init begin");
         hooks_init();
+        Logger::info("[Startup] hooks_init end");
         earlyInit();
+        Logger::info("[Startup] creating InitThread");
         CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(InitThread), nullptr, 0, nullptr);
     } else if (reason == DLL_PROCESS_DETACH) {
         hooks_shutdown();
