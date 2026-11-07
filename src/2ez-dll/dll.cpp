@@ -245,7 +245,9 @@ static void earlyInit() {
         case GameFamily::EZ2Dancer:
             initHardlock();
             EZ2DancerIO::installHooks(s_settings);
-            AudioEQ::install(s_settings);
+            if (StartupDiagnosticPolicy::optionalAudioEnabled(mode)) {
+                AudioEQ::install(s_settings);
+            }
             if (s_settings->gameSettings().value("native_graphics_mode", false)) {
                 Logger::info("[Display] Native DirectX diagnostic: 2EZ DDraw7 hooks disabled.");
             } else {
