@@ -752,6 +752,29 @@ static void renderSettingsTab() {
     globalCheckbox("Enable IO Emulation",                "io_emu",       true);
     globalCheckbox("Force High Priority (experimental)", "high_priority", false);
 
+    ImGui::SeparatorText("Startup crash isolation (advanced)");
+    ImGui::TextWrapped("Use only to investigate a startup crash. Minimal does NOT "
+        "disable game IO, hardlock or super-early compatibility patches.");
+    bool minimalStartup = g_app.settings.gameSettings().value(
+        "startup_diagnostics_mode", "normal") == "minimal";
+    if (ImGui::Checkbox("Minimal startup: skip optional audio and late patches", &minimalStartup)) {
+        g_app.settings.gameSettings()["startup_diagnostics_mode"] =
+            minimalStartup ? "minimal" : "normal";
+        if (minimalStartup) {
+            g_app.settings.gameSettings()["logging_enabled"] = true;
+        }
+        g_app.settings.save();
+    }
+    if (minimalStartup) {
+        ImGui::TextColored(ImVec4(1.0f, 0.69f, 0.3f, 1.0f),
+            "Diagnostic only: may prevent a game that needs these patches from starting.");
+        ImGui::TextWrapped("Extra DLLs, required game IO and super-early patches are "
+            "still active. Return to Normal for normal gameplay.");
+        if (ImGui::Button("Restore normal startup")) {
+            g_app.settings.gameSettings()["startup_diagnostics_mode"] = "normal";
+            g_app.settings.save();
+        }
+    }
     ImGui::SeparatorText("Debug Settings");
     gameCheckbox("Enable Logging", "logging_enabled", false);
     gameCheckbox("Enable local extension events (opt-in)", "extension_events_enabled", false);
