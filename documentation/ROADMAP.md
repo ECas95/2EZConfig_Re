@@ -2,6 +2,12 @@
 
 Last reviewed: **2026-11-05**. The findings below are from source inspection plus the automated Windows CI results. They are not a full arcade-hardware or Windows XP SP3 validation report.
 
+## Crash isolation after successful native Direct3D7 device tests
+
+User's independent Direct3D7 tests now both report success for **HAL and RGB CreateDevice**, including temporary render-surface creation (`0x00000000`). The remaining work focuses on **game-specific initialization and optional 2EZ startup modules**, not another vendor-specific graphics wrapper.
+
+Implemented a per-game **Minimal startup** experiment with stage markers and an explicit restore-to-Normal button. It leaves IO/hardlock and super-early patch handling active but omits optional audio and later patch passes; it can change game compatibility and is not meant for normal gameplay. [A/B procedure](STARTUP_DIAGNOSTICS.md).
+
 ## Validation of Direct3D7 device creation
 
 User-supplied basic/deep JSON confirm native DirectDraw7 creation, DDSCL_NORMAL, IDirect3D7 access and enumeration of **3 legacy device types** on a 1920x1080, 32bpp, 144Hz display. Enumeration **does not create a render device**. The new opt-in --device-hal/--device-rgb tests allocate a temporary 128x128 offscreen 3D surface and call IDirect3D7::CreateDevice in a separate diagnostic process; no game hooks or wrappers. An actual scene, exclusive mode and Final:EX gameplay remain unverified. [Test procedure](NATIVE_DX7_PROBE.md).
