@@ -181,6 +181,12 @@ Los binarios esperados están en `build/release/bin/`. El compilador GCC 12.2 de
 
 Las releases se generan únicamente desde etiquetas de versión `vX.Y.Z` e incluyen los archivos de licencia y checksums.
 
+## Aislamiento del arranque de Final:EX
+
+Las pruebas recientes confirmaron que tanto HAL como RGB crean superficies y dispositivos Direct3D7 correctamente en un proceso independiente. Esto **no** significa que Final:EX pueda iniciar; el siguiente ensayo compara el arranque de 2EZ con y sin sus módulos opcionales.
+
+En Settings aparece **Startup crash isolation (advanced)**. El modo Minimal omite audio opcional, parches tempranos/post-descifrado, parche de versión y parches tardíos, pero **conserva IO, hardlock y los parches super-early**. Actívalo solamente para comparar logs; puede impedir el arranque si un parche era necesario. El comportamiento Normal es el predeterminado. [Procedimiento](documentation/STARTUP_DIAGNOSTICS.md).
+
 ## Prueba de creación de dispositivo Direct3D 7
 
 Los dos JSON anteriores confirmaron que DirectDraw7 y la enumeración de 3 dispositivos Direct3D7 responden correctamente. El siguiente paso opcional prueba **CreateDevice** de forma aislada: `2EZDx7Probe.exe --device-hal` (acelerado) y `2EZDx7Probe.exe --device-rgb` (software). Cada prueba crea y libera una superficie temporal de 128x128 dentro del comprobador; no modifica Final:EX ni la resolución. [Instrucciones](documentation/NATIVE_DX7_PROBE.md).

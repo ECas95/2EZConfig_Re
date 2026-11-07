@@ -2,6 +2,13 @@
 
 This community fork is based on [ben-rnd/2EZConfig-V2](https://github.com/ben-rnd/2EZConfig-V2). Preserve original authorship and attribution. Entries below document changes developed within this fork.
 
+## Unreleased — controlled startup diagnostic stages
+
+- Added opt-in per-game Minimal startup troubleshooting mode that preserves required IO/hardlock and super-early patches, while suppressing optional audio enhancements, early/normal patch passes and the version-string patch.
+- Added explicit stage begin/end logging around startup hooks, IO, patching and worker initialization, with a one-click Restore Normal control.
+- Pure-policy Windows CTest verifies required IO/super-early passes cannot be skipped through this option.
+- Device HAL/RGB diagnostic user results both succeeded; these do not certify Final:EX rendering or exclusive fullscreen. No graphics wrapper or new device hook was introduced.
+
 ## Unreleased — isolated D3D7 render device creation tests
 
 - Added optional --device-hal and --device-rgb modes to the standalone native DirectDraw7 probe, with temporary 128x128 render target surfaces and CreateDevice HRESULT diagnostics.

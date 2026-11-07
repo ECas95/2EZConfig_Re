@@ -176,6 +176,10 @@ python tools/fnex_custommod_log_report.py "D:\Arcade\FNEX\logs\EZ2CustomMod.log"
 
 The scripts read local metadata and file paths only; they neither install the mod nor start a game. They do not authenticate scores or verify DLL signatures. Start with the [interoperability guide](documentation/fnex/CUSTOMMOD_INTEROP.md) and [private-source audit](documentation/fnex/CUSTOMMOD_SOURCE_AUDIT.md).
 
+## Controlled startup crash isolation
+
+After both standalone HAL and RGB Direct3D7 device creation tests passed, the next controlled test is the real game's 2EZ startup. Settings now includes an **opt-in Minimal startup diagnostic**, retaining IO/hardlock and required super-early patches but skipping optional audio enhancements and later patch passes. Startup logs include before/after markers. A skipped stage can be required by a specific title: Minimal is for diagnosis only, defaults OFF and includes one-click restore. [Test guide](documentation/STARTUP_DIAGNOSTICS.md).
+
 ## Isolated native DirectDraw7 and Direct3D7 probe
 
 The new 32-bit 2EZDx7Probe.exe checks the actual Windows system DirectDraw7 runtime without starting the game, injecting hooks, applying graphics wrappers or changing display modes. Optional --deep enumerates D3D7 devices in the standalone process. Results help isolate OS versus game startup failures, **not certify the actual game**. [DX7 probe guide](documentation/NATIVE_DX7_PROBE.md).
