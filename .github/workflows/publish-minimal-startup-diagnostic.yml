@@ -1,0 +1,161 @@
+name: Publish Minimal Startup Diagnostic Preview
+
+on:
+  push:
+    branches:
+      - 'release-preview/minimal-startup-2026-11-06'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 2ez-minimal-startup-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout merged source revision
+        uses: actions/checkout@v4
+        with:
+          ref: eba4fde3cd7e76e9cb5da1aee7fe10c5059928a8
+
+      - name: Configure 32-bit release
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release --parallel 2
+
+      - name: Run compiled CTest suite
+        run: ctest --test-dir build/release -C Release --output-on-failure
+
+      - name: Run Python regression suite
+        run: python -m unittest discover -s tools/tests -p 'test_*.py' -v
+
+      - name: Validate required binaries and reject wrappers
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($name in @('2EZConfig.exe','2EZ.dll')) {
+            if (-not (Test-Path -LiteralPath "build/release/bin/$name" -PathType Leaf)) {
+              throw "Missing compiled game launcher component: $name"
+            }
+          }
+          if (-not (Test-Path -LiteralPath "build/release/bin/startup_diagnostic_policy_tests.exe" -PathType Leaf) -and
+              -not (Test-Path -LiteralPath "build/release/tests/startup_diagnostic_policy_tests.exe" -PathType Leaf)) {
+            Write-Host 'CTest already validated the policy test; binary output location varies by generator.'
+          }
+
+      - name: Package startup diagnostic release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path release,release/documentation,release/tools -Force | Out-Null
+          foreach ($name in @('2EZConfig.exe','2EZ.dll')) {
+            Copy-Item -LiteralPath "build/release/bin/$name" -Destination "release/$name"
+          }
+          foreach ($name in @('LICENSE','THIRD_PARTY_LICENSES','README.es.md')) {
+            Copy-Item -LiteralPath $name -Destination release/
+          }
+          foreach ($name in @('STARTUP_DIAGNOSTICS.md','NATIVE_DIRECTX_RECOVERY.md','INTEL_DRIVER_CRASH.md')) {
+            Copy-Item -LiteralPath "documentation/$name" -Destination "release/documentation/$name"
+          }
+          Copy-Item -LiteralPath "tools/windows_crash_report.ps1" -Destination "release/tools/windows_crash_report.ps1"
+
+          @(
+            '# 2EZConfig_Re - Minimal Startup Diagnostic 1',
+            '',
+            'Version EXPERIMENTAL: NO certifica compatibilidad Final:EX.',
+            'Las pruebas aisladas HAL y RGB Direct3D7 anteriores funcionan.',
+            'Ahora se aislan modulos opcionales en el arranque del juego.',
+            '',
+            '1. Respaldar 2EZConfig.exe, 2EZ.dll y game-settings.json.',
+            '2. Copiar SOLO los dos binarios nuevos a la carpeta del juego.',
+            '3. No instalar dgVoodoo, otros wrappers o 2EZWindowMode.exe.',
+            '4. Display: modo Original, Native DirectX ON, refresco Game default.',
+            '5. Settings: Enable Logging ON.',
+            '6. PRUEBA A: Startup crash isolation = Normal (predeterminado).',
+            '7. Ejecutar una vez. Copiar 2ez-logs.txt y reporte de Windows.',
+            '8. PRUEBA B: Startup crash isolation = Minimal.',
+            '9. Ejecutar una vez. Copiar 2ez-logs.txt y reporte de Windows.',
+            '10. RESTAURAR Startup crash isolation = Normal al terminar.',
+            '',
+            'Minimal OMITIRA audio opcional, parches early y normal, y version.',
+            'CONSERVA IO, hardlock, parches super-early y el propio juego.',
+            'Puede provocar fallas si el juego necesita alguno de esos parches.',
+            'Evitar cambiar simultaneamente GPU, driver, resolucion o DLL extra.',
+            '',
+            'Desde PowerShell, dentro de esta carpeta:',
+            '  .\tools\windows_crash_report.ps1 -AppName EZ2AC.exe',
+            '',
+            'Compartir logs depurados de datos personales, no el juego.',
+            'La ruta DirectX7 no es un wrapper y no ofrece Windowed nativo.',
+            'Ver documentation/STARTUP_DIAGNOSTICS.md para interpretar resultados.'
+          ) | Set-Content -Encoding utf8 'release/LEEME-PRUEBAS-STARTUP.md'
+
+          foreach ($name in @('2EZWindowMode.exe','ddraw.dll','d3d9.dll','dxgi.dll','EZ2AC.exe')) {
+            if (Test-Path -LiteralPath "release/$name") { throw "Unexpected binary: $name" }
+          }
+          $base = (Resolve-Path release).Path
+          $hashes = foreach ($item in @(Get-ChildItem -LiteralPath release -Recurse -File | Sort-Object FullName)) {
+            $relative = $item.FullName.Substring($base.Length + 1).Replace('\','/')
+            $sha = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$sha  $relative"
+          }
+          $hashes | Set-Content -Path 'release/SHA256SUMS.txt' -Encoding ascii
+          $zip = '2EZConfig_Re-v1.0.0-startup-diagnostic.1.zip'
+          Compress-Archive -Path 'release/*' -DestinationPath $zip -CompressionLevel Optimal -Force
+          $zipSha = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$zipSha  $zip" | Set-Content -Encoding ascii "$zip.sha256"
+
+      - name: Upload tested package
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-diagnostic-release-assets
+          if-no-files-found: error
+          path: |
+            2EZConfig_Re-v1.0.0-startup-diagnostic.1.zip
+            2EZConfig_Re-v1.0.0-startup-diagnostic.1.zip.sha256
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - name: Retrieve tested build
+        uses: actions/download-artifact@v4
+        with:
+          name: startup-diagnostic-release-assets
+          path: dist
+
+      - name: Publish startup diagnostic prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-startup-diagnostic.1
+          target_commitish: eba4fde3cd7e76e9cb5da1aee7fe10c5059928a8
+          name: 2EZConfig_Re - Minimal Startup Diagnostic 1
+          draft: false
+          prerelease: true
+          make_latest: false
+          body: |
+            ## Startup-crash isolation: experimental
+
+            The operator's **HAL and RGB device-creation tests both succeeded** on the native DirectDraw7/Direct3D7 runtime. That does not prove Final:EX will render correctly. This release therefore tests game-specific startup paths instead of repeating driver/vendor tweaks.
+
+            New **Settings > Startup crash isolation (advanced) > Minimal startup**:
+            - Default **Normal** preserves existing behavior.
+            - **Minimal** skips optional Hypersonik/AudioEQ, post-decrypt early patches, late normal patches and the version-string patch.
+            - Required game IO/hardlock, global hooks and super-early patch pass remain active. An omitted patch may be required: **Minimal is not a gameplay mode**.
+            - Logging marks startup stages. **Restore normal startup** after testing.
+
+            **Two runs:** Display Original, Native DirectX ON, default display refresh and same GPU setting. Compare (A) Normal and (B) Minimal, save logs and Windows Event 1000 crash reports. Read LEEME-PRUEBAS-STARTUP.md and documentation/STARTUP_DIAGNOSTICS.md inside the ZIP.
+
+            Includes 2EZConfig.exe and 2EZ.dll for x86 Windows, documentation, crash analyzer and SHA-256 hashes. **Excludes dgVoodoo, wrappers, 2EZWindowMode.exe, executable game files and proprietary content.**
+
+            No real Final:EX hardware/Windows graphics compatibility is certified. Source: merged PR #16, pinned to commit eba4fde3cd7e76e9cb5da1aee7fe10c5059928a8.
+          files: |
+            dist/2EZConfig_Re-v1.0.0-startup-diagnostic.1.zip
+            dist/2EZConfig_Re-v1.0.0-startup-diagnostic.1.zip.sha256
